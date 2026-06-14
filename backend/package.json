@@ -1,0 +1,32 @@
+{
+  "name": "career-copilot-backend",
+  "version": "1.0.0",
+  "description": "Career Copilot API - Resume analysis backend",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "resume",
+    "career",
+    "api"
+  ],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.104.1",
+    "@supabase/supabase-js": "^2.108.1",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "multer": "^2.1.1",
+    "pdf-parse": "^1.1.1"
+  },
+  "devDependencies": {
+    "form-data": "^4.0.6",
+    "nodemon": "^3.1.14"
+  }
+}
