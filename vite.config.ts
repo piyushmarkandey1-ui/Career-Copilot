@@ -27,10 +27,9 @@ export default defineConfig(({ mode }) => {
       sourcemap: false,
       rollupOptions: {
         output: {
-          // Split vendor chunks for better long-term caching
-          manualChunks: {
-            react:  ['react', 'react-dom'],
-            router: ['react-router-dom'],
+          manualChunks(id) {
+            if (id.includes('react-router-dom')) return 'router'
+            if (id.includes('react-dom') || id.includes('/react/')) return 'react'
           },
         },
       },

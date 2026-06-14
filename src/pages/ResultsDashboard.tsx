@@ -1,16 +1,15 @@
 import { Link, useLocation } from 'react-router-dom'
 
-interface RoadmapItem {
-  week: string
-  action: string
-  why: string
-}
-
 interface AnalysisData {
   readiness_score: number
-  one_liner: string
-  brutal_gaps: string[]
-  fix_it_roadmap: RoadmapItem[]
+  strengths: string[]
+  weaknesses: string[]
+  resume_structure_feedback: string
+  project_feedback: string
+  skills_feedback: string
+  target_role_fit: string
+  improvement_roadmap: string[]
+  summary: string
 }
 
 interface LocationState {
@@ -77,29 +76,27 @@ export default function ResultsDashboard() {
 
   // Mock data for when no state is passed (sample view)
   const mockData: AnalysisData = {
-    readiness_score: 45,
-    one_liner: "Your resume screams 'junior' when you're applying for senior roles. Fix the stack, add metrics, show architecture.",
-    brutal_gaps: [
-      "No quantifiable achievements. \"Worked on projects\" tells me nothing about impact.",
-      "Missing modern stack. React 16 was 6 years ago. Where's Next.js? TypeScript? Tailwind?",
-      "Zero evidence of system design. Senior roles need architecture thinking, not just code.",
+    readiness_score: 75,
+    summary: "Strong foundation with good project experience, but needs better metrics and tailored skills formatting to stand out for senior roles.",
+    strengths: [
+      "Demonstrates solid experience with modern frontend frameworks.",
+      "Projects show full-stack capability and deployment experience.",
+      "Clear progression in responsibilities over time."
     ],
-    fix_it_roadmap: [
-      {
-        week: 'Week 1-2',
-        action: 'Rewrite every bullet point with metrics. Convert "improved performance" to "reduced load time from 3s to 800ms (73% faster)"',
-        why: 'Recruiters skim for numbers. No metrics = invisible resume.',
-      },
-      {
-        week: 'Week 3-4',
-        action: 'Build a Next.js 14 portfolio with App Router, Server Components, and Tailwind. Deploy to Vercel.',
-        why: 'Proves you\'re current. One modern project beats five outdated ones.',
-      },
-      {
-        week: 'Month 2',
-        action: 'Add a "System Design" section. Document how you architected something complex (microservices, state management, caching strategy).',
-        why: 'Senior developers design systems, not just implement features.',
-      },
+    weaknesses: [
+      "Lacks quantifiable achievements and metrics.",
+      "System design and architecture skills are underrepresented.",
+      "Some older technologies are taking up valuable space."
+    ],
+    resume_structure_feedback: "The structure is generally clean, but the skills section could be categorized better. Use bullet points more effectively to highlight impact rather than just listing tasks.",
+    project_feedback: "Your projects are good, but they need live links and GitHub repository links. Focus on explaining the 'why' behind technical decisions rather than just what you built.",
+    skills_feedback: "You have a great foundation in React and Node.js. Consider removing older skills like jQuery and adding more emphasis on Next.js, TypeScript, and testing frameworks.",
+    target_role_fit: "You are well-suited for mid-level frontend roles. To hit senior level, you need to show more architectural ownership and mentorship.",
+    improvement_roadmap: [
+      "Rewrite bullet points to include specific metrics (e.g., 'Reduced load time by 30%').",
+      "Add links to live deployments and GitHub repos for all listed projects.",
+      "Create a dedicated 'System Architecture' bullet for your most recent role.",
+      "Categorize the skills section into 'Languages', 'Frameworks', 'Tools', etc."
     ],
   }
 
@@ -119,7 +116,7 @@ export default function ResultsDashboard() {
       {/* Header */}
       <div className="mb-10 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-3xl font-extrabold">Your Roast Results</h1>
+          <h1 className="text-3xl font-extrabold">Analysis Results</h1>
           <p className="mt-1 text-slate-400">
             <span className="font-medium text-white">{filename}</span> · Target:{' '}
             <span className="font-medium text-violet-400">{targetRole}</span>
@@ -145,27 +142,25 @@ export default function ResultsDashboard() {
           <div className="flex-1 text-center md:text-left">
             <div className="mb-4">
               <span className="text-sm font-medium uppercase tracking-widest text-slate-400">
-                The Truth
+                Summary
               </span>
             </div>
             <p className={`text-2xl font-bold leading-relaxed ${scoreColor}`}>
-              "{analysis.one_liner}"
+              "{analysis.summary}"
             </p>
             <div className="mt-6">
               {analysis.readiness_score >= 80 ? (
                 <p className="text-slate-400">
-                  🌟 <strong>Excellent!</strong> Your resume is competitive. A few tweaks and
-                  you're golden.
+                  🌟 <strong>Excellent!</strong> Your resume is highly competitive. A few tweaks and
+                  you're ready to apply.
                 </p>
               ) : analysis.readiness_score >= 60 ? (
                 <p className="text-slate-400">
-                  💪 <strong>Good foundation.</strong> You're on the right track, but there's work
-                  to do.
+                  💪 <strong>Good foundation.</strong> You're on the right track, but there's room for improvement to stand out.
                 </p>
               ) : (
                 <p className="text-slate-400">
-                  🔥 <strong>Needs serious work.</strong> Follow the roadmap below to transform your
-                  resume.
+                  🔧 <strong>Needs some work.</strong> Follow the roadmap below to better align your resume with your target role.
                 </p>
               )}
             </div>
@@ -173,59 +168,72 @@ export default function ResultsDashboard() {
         </div>
       </div>
 
-      {/* Brutal Gaps */}
-      <section className="mb-8">
-        <h2 className="mb-5 text-xl font-bold">🔴 Top 3 Brutal Gaps</h2>
-        <div className="flex flex-col gap-4">
-          {analysis.brutal_gaps.slice(0, 3).map((gap, i) => (
-            <div
-              key={i}
-              className="flex gap-4 rounded-xl border border-red-500/20 bg-red-500/5 p-5"
-            >
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-500/20 font-bold text-red-300">
-                {i + 1}
-              </div>
-              <div className="flex-1">
-                <p className="leading-relaxed text-slate-200">{gap}</p>
-              </div>
-            </div>
-          ))}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+        {/* Strengths */}
+        <section className="rounded-2xl border border-white/10 bg-white/5 p-6">
+          <h2 className="mb-5 text-xl font-bold text-emerald-400">✅ Strengths</h2>
+          <ul className="space-y-3">
+            {analysis.strengths.map((strength, i) => (
+              <li key={i} className="flex gap-3 text-slate-200">
+                <span className="shrink-0 text-emerald-500">•</span>
+                <span className="leading-relaxed">{strength}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        {/* Weaknesses */}
+        <section className="rounded-2xl border border-white/10 bg-white/5 p-6">
+          <h2 className="mb-5 text-xl font-bold text-amber-400">⚠️ Weaknesses</h2>
+          <ul className="space-y-3">
+            {analysis.weaknesses.map((weakness, i) => (
+              <li key={i} className="flex gap-3 text-slate-200">
+                <span className="shrink-0 text-amber-500">•</span>
+                <span className="leading-relaxed">{weakness}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      </div>
+
+      {/* Detailed Feedback Sections */}
+      <section className="mb-8 space-y-6">
+        <h2 className="text-xl font-bold">Detailed Feedback</h2>
+        
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+          <h3 className="mb-2 text-lg font-semibold text-violet-400">Resume Structure</h3>
+          <p className="leading-relaxed text-slate-200">{analysis.resume_structure_feedback}</p>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+          <h3 className="mb-2 text-lg font-semibold text-violet-400">Projects & Experience</h3>
+          <p className="leading-relaxed text-slate-200">{analysis.project_feedback}</p>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+          <h3 className="mb-2 text-lg font-semibold text-violet-400">Skills Alignment</h3>
+          <p className="leading-relaxed text-slate-200">{analysis.skills_feedback}</p>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+          <h3 className="mb-2 text-lg font-semibold text-violet-400">Target Role Fit</h3>
+          <p className="leading-relaxed text-slate-200">{analysis.target_role_fit}</p>
         </div>
       </section>
 
       {/* Fix It Roadmap */}
       <section className="mb-12">
-        <h2 className="mb-5 text-xl font-bold">🛣️ Fix-It Roadmap</h2>
-        <div className="space-y-6">
-          {analysis.fix_it_roadmap.map((item, i) => (
+        <h2 className="mb-5 text-xl font-bold">🛣️ Improvement Roadmap</h2>
+        <div className="space-y-4">
+          {analysis.improvement_roadmap.map((item, i) => (
             <div
               key={i}
-              className="rounded-2xl border border-white/10 bg-white/5 p-6 transition hover:border-violet-500/30 hover:bg-white/[0.07]"
+              className="flex items-center gap-4 rounded-xl border border-white/10 bg-white/5 p-5 transition hover:border-violet-500/30 hover:bg-white/[0.07]"
             >
-              <div className="mb-4 flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 text-sm font-bold">
-                  {i + 1}
-                </div>
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-widest text-violet-400">
-                    {item.week}
-                  </p>
-                </div>
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 text-sm font-bold">
+                {i + 1}
               </div>
-              <div className="ml-13 space-y-3">
-                <div>
-                  <p className="mb-1 text-xs font-medium uppercase tracking-wider text-slate-500">
-                    Action
-                  </p>
-                  <p className="leading-relaxed text-slate-200">{item.action}</p>
-                </div>
-                <div>
-                  <p className="mb-1 text-xs font-medium uppercase tracking-wider text-slate-500">
-                    Why It Matters
-                  </p>
-                  <p className="text-sm leading-relaxed text-slate-400">{item.why}</p>
-                </div>
-              </div>
+              <p className="leading-relaxed text-slate-200">{item}</p>
             </div>
           ))}
         </div>
@@ -236,7 +244,7 @@ export default function ResultsDashboard() {
         <h3 className="mb-4 font-semibold">Your Progress</h3>
         <div className="mb-2 flex items-center justify-between text-sm">
           <span className="text-slate-400">Roadmap completion</span>
-          <span className="font-medium">0 / {analysis.fix_it_roadmap.length} steps</span>
+          <span className="font-medium">0 / {analysis.improvement_roadmap.length} steps</span>
         </div>
         <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
           <div className="h-full w-0 rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 transition-all duration-500" />
@@ -248,7 +256,7 @@ export default function ResultsDashboard() {
 
       {/* CTA */}
       <div className="rounded-2xl bg-gradient-to-br from-violet-600/25 to-indigo-600/25 p-8 text-center ring-1 ring-white/10">
-        <h3 className="mb-2 text-xl font-bold">Ready to fix it?</h3>
+        <h3 className="mb-2 text-xl font-bold">Ready to analyze again?</h3>
         <p className="mb-6 text-slate-400">
           Upload your updated resume anytime to see your progress and get fresh feedback.
         </p>

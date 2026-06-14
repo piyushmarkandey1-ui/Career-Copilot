@@ -30,18 +30,18 @@ export interface UploadResult {
   preview: string
 }
 
-export interface RoadmapItem {
-  priority: 'high' | 'medium' | 'low'
-  action: string
-}
-
 export interface AnalysisResult {
   targetRole: string
   wordCount: number
   readiness_score: number
-  one_liner: string
-  brutal_gaps: string[]
-  fix_it_roadmap: RoadmapItem[]
+  strengths: string[]
+  weaknesses: string[]
+  resume_structure_feedback: string
+  project_feedback: string
+  skills_feedback: string
+  target_role_fit: string
+  improvement_roadmap: string[]
+  summary: string
 }
 
 export interface SaveResultPayload {

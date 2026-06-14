@@ -1,17 +1,4 @@
 const multer = require('multer');
-const path = require('path');
-
-// Configure storage
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    // Generate unique filename: timestamp-originalname
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + '-' + file.originalname);
-  },
-});
 
 // File filter - only accept PDFs
 const fileFilter = (req, file, cb) => {
@@ -22,10 +9,10 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Configure multer
+// Keep uploads in memory — files are parsed immediately and not persisted
 const upload = multer({
-  storage: storage,
-  fileFilter: fileFilter,
+  storage: multer.memoryStorage(),
+  fileFilter,
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB max file size
   },

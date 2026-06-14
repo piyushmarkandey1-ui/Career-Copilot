@@ -79,7 +79,7 @@ export default function UploadResumePage() {
       }, 300)
 
       // Upload to backend
-      const response = await fetch(`${API_URL}/api/resume/upload`, {
+      const response = await fetch(`${API_URL}/api/analyze`, {
         method: 'POST',
         body: formData,
       })
@@ -95,9 +95,9 @@ export default function UploadResumePage() {
         setTimeout(() => {
           navigate('/results', {
             state: {
-              analysis: data.data.analysis,
-              filename: data.data.filename,
-              targetRole: data.data.targetRole,
+              analysis: data.data,
+              filename: file.name,
+              targetRole: targetRole,
             },
           })
         }, 500)
@@ -206,7 +206,7 @@ export default function UploadResumePage() {
       {state === 'uploading' && (
         <div className="mt-6">
           <div className="mb-2 flex items-center justify-between text-sm">
-            <span className="text-slate-400">Roasting your resume…</span>
+            <span className="text-slate-400">Analyzing your resume…</span>
             <span className="font-medium text-violet-400">{Math.round(progress)}%</span>
           </div>
           <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
@@ -222,13 +222,13 @@ export default function UploadResumePage() {
       <button
         onClick={uploadAndAnalyze}
         disabled={!canSubmit}
-        className="mt-8 w-full rounded-xl bg-gradient-to-r from-red-600 to-rose-600 py-3.5 font-semibold shadow-lg shadow-red-500/20 transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+        className="mt-8 w-full rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 py-3.5 font-semibold shadow-lg shadow-violet-500/20 transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
       >
         {state === 'uploading'
-          ? '🔥 Roasting…'
+          ? '🔍 Analyzing…'
           : state === 'done'
           ? '✓ Done! Redirecting…'
-          : '🔥 Roast My Resume'}
+          : 'Analyze My Resume'}
       </button>
 
       {/* Privacy note */}

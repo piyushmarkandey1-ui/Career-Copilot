@@ -33,11 +33,22 @@ const getClient = () => {
 
 // ── Prompt ────────────────────────────────────────────────────────────────────
 const buildSystemPrompt = () => `
-You are an elite technical recruiter and career coach with 15+ years of hiring experience at FAANG companies.
-Your job is to review resumes with brutal honesty — no sugar-coating, no platitudes.
-You give feedback that genuinely helps candidates fix their resume and land the role they want.
+You are a professional career coach and senior tech recruiter with 10+ years of hiring experience. A student has uploaded their resume and selected a target role. Your job is to give a balanced, unbiased, and realistic resume review.
 
-Always respond with ONLY a valid JSON object. No markdown, no explanation outside the JSON.
+Highlight both strengths and weaknesses. Be honest but respectful. Do not exaggerate. Do not insult. Do not discourage. Base your feedback only on the resume content.
+
+Return your response in this exact JSON format:
+{
+  "readiness_score": <number 0-100>,
+  "strengths": ["strength1", "strength2", "strength3"],
+  "weaknesses": ["weakness1", "weakness2", "weakness3"],
+  "resume_structure_feedback": "<feedback on formatting, clarity, sections, readability>",
+  "project_feedback": "<feedback on projects, technical depth, impact, deployment, GitHub links>",
+  "skills_feedback": "<feedback on skills relevance and gaps>",
+  "target_role_fit": "<how suitable the resume is for the selected role>",
+  "improvement_roadmap": ["action1", "action2", "action3"],
+  "summary": "<professional one-line summary>"
+}
 `.trim();
 
 const buildUserPrompt = (resumeText, targetRole) => `
@@ -50,34 +61,23 @@ ${resumeText.slice(0, 12000)}
 
 Return exactly this JSON structure (no extra keys, no markdown fences):
 {
-  "readiness_score": <integer 0-100, how ready this resume is for the ${targetRole} role>,
-  "brutal_gaps": [
-    "<specific gap or weakness — be direct and concrete, no filler words>",
-    ...
-  ],
-  "fix_it_roadmap": [
-    {
-      "priority": "<high | medium | low>",
-      "action": "<one specific, actionable step the candidate must take>"
-    },
-    ...
-  ],
-  "one_liner": "<one punchy, memorable sentence that captures the core problem with this resume>"
+  "readiness_score": <integer 0-100>,
+  "strengths": ["...", "...", "..."],
+  "weaknesses": ["...", "...", "..."],
+  "resume_structure_feedback": "...",
+  "project_feedback": "...",
+  "skills_feedback": "...",
+  "target_role_fit": "...",
+  "improvement_roadmap": ["...", "...", "..."],
+  "summary": "..."
 }
-
-Rules:
-- readiness_score must be an integer between 0 and 100.
-- brutal_gaps: 3 to 6 items. Be specific — name exact missing skills, weak phrasing, or missing metrics.
-- fix_it_roadmap: 4 to 7 items sorted by priority (high first). Each action must be concrete and doable.
-- one_liner: max 20 words. Punchy. Honest. Like something a senior recruiter would say after 10 seconds.
-- Respond with ONLY the JSON object. No explanation, no markdown code fences.
 `.trim();
 
 // ── Main export ───────────────────────────────────────────────────────────────
 /**
  * @param {string} resumeText  - Plain text extracted from the PDF
  * @param {string} targetRole  - e.g. "Frontend Developer"
- * @returns {Promise<{readiness_score, brutal_gaps, fix_it_roadmap, one_liner}>}
+ * @returns {Promise<{readiness_score, strengths, weaknesses, resume_structure_feedback, project_feedback, skills_feedback, target_role_fit, improvement_roadmap, summary}>}
  */
 const analyzeWithClaude = async (resumeText, targetRole) => {
   if (!resumeText || resumeText.trim().length < 50) {
@@ -118,13 +118,28 @@ const analyzeWithClaude = async (resumeText, targetRole) => {
   }
 
   // ── Validate shape ──────────────────────────────────────────────────────────
-  const { readiness_score, brutal_gaps, fix_it_roadmap, one_liner } = parsed;
+  const {
+    readiness_score,
+    strengths,
+    weaknesses,
+    resume_structure_feedback,
+    project_feedback,
+    skills_feedback,
+    target_role_fit,
+    improvement_roadmap,
+    summary
+  } = parsed;
 
   if (
     typeof readiness_score !== 'number' ||
-    !Array.isArray(brutal_gaps) ||
-    !Array.isArray(fix_it_roadmap) ||
-    typeof one_liner !== 'string'
+    !Array.isArray(strengths) ||
+    !Array.isArray(weaknesses) ||
+    typeof resume_structure_feedback !== 'string' ||
+    typeof project_feedback !== 'string' ||
+    typeof skills_feedback !== 'string' ||
+    typeof target_role_fit !== 'string' ||
+    !Array.isArray(improvement_roadmap) ||
+    typeof summary !== 'string'
   ) {
     throw Object.assign(
       new Error('Claude response is missing required fields.'),
@@ -134,9 +149,14 @@ const analyzeWithClaude = async (resumeText, targetRole) => {
 
   return {
     readiness_score: Math.min(100, Math.max(0, Math.round(readiness_score))),
-    brutal_gaps,
-    fix_it_roadmap,
-    one_liner,
+    strengths,
+    weaknesses,
+    resume_structure_feedback,
+    project_feedback,
+    skills_feedback,
+    target_role_fit,
+    improvement_roadmap,
+    summary,
   };
 };
 

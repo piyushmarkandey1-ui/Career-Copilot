@@ -1,10 +1,10 @@
 const { createClient } = require('@supabase/supabase-js');
-const { supabaseUrl, supabaseAnonKey } = require('../config/env');
+const { supabaseUrl, supabaseAnonKey, isSupabaseConfiguredEnv } = require('../config/env');
 
 // Initialize Supabase client
 let supabase = null;
 
-if (supabaseUrl && supabaseAnonKey) {
+if (isSupabaseConfiguredEnv()) {
   supabase = createClient(supabaseUrl, supabaseAnonKey);
   console.log('✅ Supabase client initialized');
 } else {

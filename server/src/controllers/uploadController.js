@@ -7,7 +7,7 @@
  * - Returns structured JSON: metadata + extracted text
  */
 
-const pdfParse = require('pdf-parse');
+const { PDFParse } = require('pdf-parse');
 
 /**
  * POST /api/upload
@@ -36,9 +36,23 @@ const uploadAndExtract = async (req, res) => {
   }
 
   // ── 2. Parse PDF buffer ────────────────────────────────────────────────────
-  let parsed;
+  let text = '';
+  let pages = 0;
+  let pdfVersion = null;
   try {
-    parsed = await pdfParse(req.file.buffer);
+    const parser = new PDFParse({ data: req.file.buffer });
+    await parser.load();
+    const rawOutput = await parser.getText();
+    if (typeof rawOutput === 'string') {
+      text = rawOutput;
+    } else if (Array.isArray(rawOutput)) {
+      text = rawOutput.join('\n');
+    } else if (rawOutput && rawOutput.text) {
+      text = rawOutput.text;
+    } else {
+      text = JSON.stringify(rawOutput);
+    }
+    // Some metadata parsing if needed, but pdf-parse v2 might have info on parser.doc
   } catch (err) {
     return res.status(422).json({
       success: false,
@@ -48,7 +62,7 @@ const uploadAndExtract = async (req, res) => {
   }
 
   // ── 3. Clean extracted text ────────────────────────────────────────────────
-  const rawText = parsed.text || '';
+  const rawText = text || '';
 
   // Collapse excessive blank lines / trailing spaces
   const cleanText = rawText
@@ -67,8 +81,8 @@ const uploadAndExtract = async (req, res) => {
         name      : req.file.originalname,
         sizeBytes : req.file.size,
         mimeType  : req.file.mimetype,
-        pages     : parsed.numpages,
-        pdfVersion: parsed.info?.PDFFormatVersion ?? null,
+        pages     : pages,
+        pdfVersion: pdfVersion,
       },
       text     : cleanText,
       wordCount: words.length,

@@ -3,11 +3,10 @@
  * Handles resume upload and analysis
  */
 
-const fs = require('fs').promises;
-const pdfParse = require('pdf-parse');
-const path = require('path');
+const { extractPdfText } = require('../services/pdfService');
 const { analyzeResumeWithClaude } = require('../services/claudeService');
 const { saveAnalysisResult, getResultsByEmail, getResultById, isSupabaseConfigured } = require('../services/supabaseService');
+const { isAnthropicConfigured } = require('../config/env');
 
 // Upload and analyze resume with Claude
 const uploadResume = async (req, res) => {
@@ -24,22 +23,23 @@ const uploadResume = async (req, res) => {
     const { targetRole, email } = req.body;
 
     if (!targetRole) {
-      // Clean up uploaded file
-      await fs.unlink(req.file.path);
       return res.status(400).json({
         success: false,
         message: 'Target role is required',
       });
     }
 
-    // Read the PDF file
-    const dataBuffer = await fs.readFile(req.file.path);
-    
-    // Parse PDF and extract text
-    const pdfData = await pdfParse(dataBuffer);
+    // Parse PDF from in-memory buffer
+    const header = req.file.buffer.slice(0, 5).toString();
+    if (header !== '%PDF-') {
+      return res.status(400).json({
+        success: false,
+        message: 'Uploaded file is not a valid PDF. Please upload a PDF document.',
+      });
+    }
 
-    // Clean up the uploaded file after extraction
-    await fs.unlink(req.file.path);
+    const pdfBuffer = Buffer.from(req.file.buffer);
+    const pdfData = await extractPdfText(pdfBuffer);
 
     // Check if we extracted any text
     if (!pdfData.text || pdfData.text.trim().length < 50) {
@@ -97,15 +97,6 @@ const uploadResume = async (req, res) => {
     });
   } catch (error) {
     console.error('Error processing resume:', error);
-
-    // Clean up file if it exists
-    if (req.file && req.file.path) {
-      try {
-        await fs.unlink(req.file.path);
-      } catch (unlinkError) {
-        console.error('Error deleting file:', unlinkError);
-      }
-    }
 
     // Check for specific error types
     if (error.message.includes('ANTHROPIC_API_KEY')) {
@@ -281,7 +272,9 @@ const healthCheck = (req, res) => {
     success: true,
     message: 'Career Copilot API is running',
     services: {
+      anthropic: isAnthropicConfigured(),
       supabase: isSupabaseConfigured(),
+      mockAnalysis: !isAnthropicConfigured() && process.env.NODE_ENV !== 'production',
     },
     timestamp: new Date().toISOString(),
   });

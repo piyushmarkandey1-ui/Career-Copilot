@@ -1,10 +1,63 @@
 const Anthropic = require('@anthropic-ai/sdk');
-const { anthropicApiKey } = require('../config/env');
+const { anthropicApiKey, nodeEnv, isAnthropicConfigured } = require('../config/env');
 
-// Initialize Claude client
-const anthropic = new Anthropic({
-  apiKey: anthropicApiKey,
-});
+let anthropic = null;
+
+function getAnthropicClient() {
+  if (!anthropic) {
+    anthropic = new Anthropic({ apiKey: anthropicApiKey });
+  }
+  return anthropic;
+}
+
+function parseClaudeJson(responseText) {
+  const trimmed = responseText.trim();
+  const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+  const jsonText = fenced ? fenced[1].trim() : trimmed;
+  return JSON.parse(jsonText);
+}
+
+function validateAnalysis(analysis) {
+  if (
+    typeof analysis.readiness_score !== 'number' ||
+    !Array.isArray(analysis.brutal_gaps) ||
+    !Array.isArray(analysis.fix_it_roadmap) ||
+    typeof analysis.one_liner !== 'string'
+  ) {
+    throw new Error('Invalid response structure from Claude');
+  }
+  return analysis;
+}
+
+function getMockAnalysis(targetRole) {
+  return {
+    readiness_score: 45,
+    brutal_gaps: [
+      `Your resume does not clearly show experience aligned with ${targetRole} expectations.`,
+      'Bullet points describe tasks, not measurable impact or outcomes.',
+      'Missing modern tools, projects, or portfolio links that prove current skills.',
+    ],
+    fix_it_roadmap: [
+      {
+        week: 'Week 1-2',
+        action: 'Rewrite each bullet with metrics (latency, revenue, users, cost saved).',
+        why: 'Recruiters scan for proof of impact, not generic responsibilities.',
+      },
+      {
+        week: 'Week 3-4',
+        action: `Build one role-relevant project and link it prominently for ${targetRole}.`,
+        why: 'A concrete project proves you can do the work today, not years ago.',
+      },
+      {
+        week: 'Month 2',
+        action: 'Add a concise skills section mapped to the job description keywords.',
+        why: 'ATS and hiring managers match resumes to role requirements first.',
+      },
+    ],
+    one_liner:
+      "Your resume reads like a task list — show impact, current stack, and proof you can do the role.",
+  };
+}
 
 /**
  * Analyze resume using Claude API
@@ -13,7 +66,11 @@ const anthropic = new Anthropic({
  * @returns {Promise<Object>} Analysis results
  */
 async function analyzeResumeWithClaude(resumeText, targetRole) {
-  if (!anthropicApiKey) {
+  if (!isAnthropicConfigured()) {
+    if (nodeEnv === 'development') {
+      console.warn('⚠️  ANTHROPIC_API_KEY not configured — returning mock analysis for local dev');
+      return getMockAnalysis(targetRole);
+    }
     throw new Error('ANTHROPIC_API_KEY is not configured');
   }
 
@@ -56,37 +113,28 @@ Provide your analysis in the following JSON format (respond ONLY with valid JSON
 }`;
 
   try {
-    const message = await anthropic.messages.create({
+    const message = await getAnthropicClient().messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 2000,
       temperature: 0.7,
       system: systemPrompt,
-      messages: [
-        {
-          role: 'user',
-          content: userPrompt,
-        },
-      ],
+      messages: [{ role: 'user', content: userPrompt }],
     });
 
-    // Extract the response text
     const responseText = message.content[0].text;
-
-    // Parse JSON response
-    const analysis = JSON.parse(responseText);
-
-    // Validate response structure
-    if (!analysis.readiness_score || !analysis.brutal_gaps || !analysis.fix_it_roadmap || !analysis.one_liner) {
-      throw new Error('Invalid response structure from Claude');
-    }
-
-    return analysis;
+    return validateAnalysis(parseClaudeJson(responseText));
   } catch (error) {
     console.error('Claude API Error:', error);
+
+    if (error?.status === 401 || error?.message?.includes('authentication_error')) {
+      throw new Error('ANTHROPIC_API_KEY is invalid. Update backend/.env with a valid key from console.anthropic.com');
+    }
+
     throw new Error(`Failed to analyze resume: ${error.message}`);
   }
 }
 
 module.exports = {
   analyzeResumeWithClaude,
+  getMockAnalysis,
 };

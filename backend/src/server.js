@@ -1,5 +1,5 @@
 const app = require('./app');
-const { port, nodeEnv } = require('./config/env');
+const { port, nodeEnv, isAnthropicConfigured } = require('./config/env');
 
 const server = app.listen(port, () => {
   console.log('='.repeat(50));
@@ -7,6 +7,9 @@ const server = app.listen(port, () => {
   console.log(`📍 Environment: ${nodeEnv}`);
   console.log(`🌐 Server running on: http://localhost:${port}`);
   console.log(`📊 Health check: http://localhost:${port}/api/resume/health`);
+  if (!isAnthropicConfigured()) {
+    console.log('⚠️  ANTHROPIC_API_KEY missing/placeholder — using mock analysis in development');
+  }
   console.log('='.repeat(50));
 });
 
