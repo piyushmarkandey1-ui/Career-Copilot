@@ -42,17 +42,11 @@ const uploadAndExtract = async (req, res) => {
   try {
     const parser = new PDFParse({ data: req.file.buffer });
     await parser.load();
+    // getText() returns { pages: [...], text: string, total: number }
     const rawOutput = await parser.getText();
-    if (typeof rawOutput === 'string') {
-      text = rawOutput;
-    } else if (Array.isArray(rawOutput)) {
-      text = rawOutput.join('\n');
-    } else if (rawOutput && rawOutput.text) {
-      text = rawOutput.text;
-    } else {
-      text = JSON.stringify(rawOutput);
-    }
-    // Some metadata parsing if needed, but pdf-parse v2 might have info on parser.doc
+    text = (rawOutput && rawOutput.text) ? rawOutput.text : '';
+    pages = (rawOutput && rawOutput.total) ? rawOutput.total : 0;
+    // metadata not exposed in this version of pdf-parse
   } catch (err) {
     return res.status(422).json({
       success: false,
