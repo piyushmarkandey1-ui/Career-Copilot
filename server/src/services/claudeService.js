@@ -63,7 +63,19 @@ Return your response in this exact JSON format and no other format:
     "<observation that only applies to THIS resume based on its actual content>",
     "<observation that only applies to THIS resume based on its actual content>"
   ],
-  "generic_feedback_detected": false
+  "generic_feedback_detected": false,
+  "simple_review": {
+    "summary": "<simplified student-friendly 2-3 sentence summary>",
+    "strengths": ["<simplified strength 1>", "<simplified strength 2>", "<simplified strength 3>"],
+    "weaknesses": ["<simplified weakness 1>", "<simplified weakness 2>", "<simplified weakness 3>"],
+    "improvement_roadmap": ["<simplified roadmap 1>", "<simplified roadmap 2>", "<simplified roadmap 3>"],
+    "section_feedback": [
+      { "section": "Structure", "feedback": "<simplified structure feedback>" },
+      { "section": "Projects", "feedback": "<simplified project feedback>" },
+      { "section": "Skills", "feedback": "<simplified skills feedback>" },
+      { "section": "Role Fit", "feedback": "<simplified role fit>" }
+    ]
+  }
 }
 `.trim();
 
@@ -77,6 +89,8 @@ Before writing the review, internally identify:
 - What is completely missing?
 - What should be removed or shortened?
 - What should be added for this exact target role?
+
+IMPORTANT: You must also generate a "simple_review". This must be based on the EXACT SAME detailed review you just created, but translated into simple, jargon-free language that a college student or fresher can easily understand. Preserve all meaning, just remove the complexity.
 
 Use the candidate's ACTUAL project names, company names, skill mentions, education details, and bullet points in your feedback — not generic placeholders.
 
@@ -107,7 +121,7 @@ const analyzeWithClaude = async (resumeText, targetRole) => {
 
   const message = await client.messages.create({
     model: 'claude-opus-4-5',
-    max_tokens: 1024,
+    max_tokens: 4096,
     system: buildSystemPrompt(),
     messages: [
       { role: 'user', content: buildUserPrompt(resumeText, targetRole) },
@@ -146,6 +160,7 @@ const analyzeWithClaude = async (resumeText, targetRole) => {
     summary,
     resume_specific_observations,
     generic_feedback_detected,
+    simple_review,
   } = parsed;
 
   if (
@@ -174,9 +189,16 @@ const analyzeWithClaude = async (resumeText, targetRole) => {
     skills_feedback,
     target_role_fit,
     improvement_roadmap,
-    summary,
+    summary: summary || 'A customized summary could not be generated.',
     resume_specific_observations: Array.isArray(resume_specific_observations) ? resume_specific_observations : [],
-    generic_feedback_detected: generic_feedback_detected === true ? true : false,
+    generic_feedback_detected: !!generic_feedback_detected,
+    simple_review: simple_review || {
+      summary: summary || '',
+      strengths: Array.isArray(strengths) ? strengths : [],
+      weaknesses: Array.isArray(weaknesses) ? weaknesses : [],
+      improvement_roadmap: Array.isArray(improvement_roadmap) ? improvement_roadmap : [],
+      section_feedback: []
+    }
   };
 };
 

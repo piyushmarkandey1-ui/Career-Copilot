@@ -12,7 +12,7 @@
  * Delegates AI analysis to claudeService.
  */
 
-const { PDFParse } = require('pdf-parse');
+const { extractTextFromPDF } = require('../services/pdfExtractor');
 const { analyzeWithClaude } = require('../services/claudeService');
 const { analyzeLocally } = require('../services/localAnalyzer');
 
@@ -39,17 +39,13 @@ const analyzeResume = async (req, res) => {
   // ── A. Multipart upload — extract text from PDF on the fly ─────────────────
   if (req.file) {
     try {
-      const parser = new PDFParse({ data: req.file.buffer });
-      await parser.load();
-      // getText() returns { pages: [...], text: string, total: number }
-      const result = await parser.getText();
-      const rawText = (result && result.text) ? result.text : '';
+      const { text: rawText } = await extractTextFromPDF(req.file.buffer);
       resumeText = rawText.replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
     } catch (err) {
       console.error('PDF Parse Error:', err);
       return res.status(422).json({
         success: false,
-        message: 'Failed to parse the uploaded PDF.',
+        message: 'Failed to parse the uploaded PDF. Make sure it contains selectable (non-scanned) text.',
         detail: err.message,
       });
     }
@@ -142,29 +138,46 @@ const analyzeResume = async (req, res) => {
     })()
   )));
 
-  // ── Fire-and-forget: save to history if email provided ────────────────────
+  // ── Save to history if email provided (non-blocking) ────────────────────────
   const email = (req.body?.email || '').trim();
   if (email) {
-    try {
-      const { saveHistory } = require('./historyController');
-      const fakeRes = { status: () => ({ json: () => {} }) };
-      const fakeReq = {
-        body: {
-          email,
-          target_role: targetRole,
-          readiness_score: analysis.readiness_score,
-          ats_score: atsScore,
-          skills_score: skillsScore,
-          project_score: projectScore,
-          layout_score: layoutScore,
-          strengths: analysis.strengths,
-          weaknesses: analysis.weaknesses,
-          improvement_roadmap: analysis.improvement_roadmap ?? [],
-          full_analysis_json: analysis,
-        },
-      };
-      saveHistory(fakeReq, fakeRes).catch(() => {});
-    } catch (_) { /* silent */ }
+    setImmediate(async () => {
+      try {
+        const { saveHistory } = require('./historyController');
+        let savedOk = false;
+        const histReq = {
+          body: {
+            email,
+            target_role: targetRole,
+            readiness_score: analysis.readiness_score,
+            ats_score: atsScore,
+            skills_score: skillsScore,
+            project_score: projectScore,
+            layout_score: layoutScore,
+            strengths: Array.isArray(analysis.strengths) ? analysis.strengths : [],
+            weaknesses: Array.isArray(analysis.weaknesses) ? analysis.weaknesses : [],
+            improvement_roadmap: Array.isArray(analysis.improvement_roadmap) ? analysis.improvement_roadmap : [],
+            full_analysis_json: analysis,
+          },
+        };
+        const histRes = {
+          status: (code) => ({
+            json: (body) => {
+              if (code >= 400) {
+                console.error('[History] Save failed:', body);
+              } else {
+                savedOk = true;
+                console.log(`[History] Saved for ${email} (persisted=${body.persisted ?? 'unknown'})`);
+              }
+            },
+          }),
+        };
+        await saveHistory(histReq, histRes);
+        if (!savedOk) console.warn('[History] Save returned no response.');
+      } catch (err) {
+        console.error('[History] Save error:', err.message);
+      }
+    });
   }
 
   return res.status(200).json({

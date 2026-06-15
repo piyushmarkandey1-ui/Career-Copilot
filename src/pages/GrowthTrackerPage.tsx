@@ -14,7 +14,8 @@ import {
   ResponsiveContainer, Legend,
 } from 'recharts'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+// Use relative paths — Vite proxy forwards /api/* to the backend (no CORS, works in prod too)
+const API_URL = ''
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface HistoryRecord {
@@ -241,6 +242,7 @@ export default function GrowthTrackerPage() {
   const [error, setError] = useState('')
   const [fetched, setFetched] = useState(false)
   const [isClearing, setIsClearing] = useState(false)
+  const [isPersisted, setIsPersisted] = useState(true)
 
   // ── Fetch history ───────────────────────────────────────────────────────────
   async function fetchHistory(email: string) {
@@ -255,6 +257,7 @@ export default function GrowthTrackerPage() {
       if (!res.ok) throw new Error(json.message || 'Failed to fetch history.')
       setAllRecords(json.data ?? [])
       setAvailableRoles(json.available_roles ?? [])
+      setIsPersisted(json.persisted ?? true)
       setSubmittedEmail(trimmed)
       setSelectedRole('')
       setFetched(true)
@@ -332,9 +335,8 @@ export default function GrowthTrackerPage() {
   const overallDelta = records.length >= 2 ? last.readiness_score - first.readiness_score : null
   const bestScore = records.length > 0 ? Math.max(...records.map(r => r.readiness_score)) : null
 
-  const hasSubScores = records.some(r =>
-    r.ats_score !== null || r.skills_score !== null
-  )
+  // Sub-scores chart shows whenever there are 2+ data points (scores are always calculated)
+  const hasSubScores = chartData.length >= 2
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-12">
@@ -386,6 +388,9 @@ export default function GrowthTrackerPage() {
         </div>
         {error && <p className="mt-3 text-sm text-red-400">⚠️ {error}</p>}
       </div>
+
+
+
 
       {/* ── Results ─────────────────────────────────────────────────────────── */}
       {fetched && (
@@ -534,7 +539,7 @@ export default function GrowthTrackerPage() {
                         </div>
 
                         {/* Sub-scores (only if stored) */}
-                        {hasSubScores && (
+                        {hasSubScores && chartData.length >= 2 && (
                           <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
                             <h3 className="mb-4 font-semibold text-slate-300">Score Breakdown Over Time</h3>
                             <ResponsiveContainer width="100%" height={260}>

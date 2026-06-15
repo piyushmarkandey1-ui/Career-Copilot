@@ -1,5 +1,6 @@
 import { useState, useRef, DragEvent, ChangeEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { UploadCloud, FileText, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
 
 type UploadState = 'idle' | 'dragging' | 'uploading' | 'done' | 'error'
 
@@ -16,8 +17,8 @@ const roles = [
   'UI/UX Designer',
 ]
 
-// Get API URL from environment variable
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+// Always use a relative URL so requests go through the Vite dev proxy (no CORS)
+const API_URL = ''
 
 export default function UploadResumePage() {
   const [state, setState] = useState<UploadState>('idle')
@@ -81,7 +82,7 @@ export default function UploadResumePage() {
       }, 300)
 
       // Upload to backend
-      const response = await fetch(`${API_URL}/api/analyze`, {
+      const response = await fetch('/api/analyze', {
         method: 'POST',
         body: formData,
       })
@@ -93,13 +94,12 @@ export default function UploadResumePage() {
 
       if (data.success) {
         setState('done')
-        // Navigate to results with analysis data
         setTimeout(() => {
           navigate('/results', {
             state: {
               analysis: data.data,
               filename: file.name,
-              targetRole: targetRole,
+              targetRole: data.data.targetRole,
               email: email.trim() || null,
             },
           })
@@ -128,131 +128,162 @@ export default function UploadResumePage() {
   const canSubmit = file && targetRole && state !== 'uploading' && state !== 'done'
 
   return (
-    <main className="mx-auto max-w-2xl px-6 py-16">
+    <main className="mx-auto max-w-3xl px-6 py-20 relative">
+      {/* Background glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-violet-600/10 blur-[120px] rounded-full pointer-events-none -z-10 animate-pulse-slow"></div>
+
       {/* Header */}
-      <div className="mb-10 text-center">
-        <h1 className="mb-3 text-4xl font-extrabold">Upload Your Resume</h1>
-        <p className="text-slate-400">
-          Upload your PDF resume and select your target role. We'll analyze it and tell you exactly what's wrong.
+      <div className="mb-12 text-center animate-fade-in-up">
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-violet-500/20 bg-violet-500/10 text-violet-300 text-xs font-bold uppercase tracking-wider mb-6">
+          Step 1: Upload
+        </div>
+        <h1 className="mb-4 text-4xl md:text-5xl font-extrabold tracking-tight">
+          Upload Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-indigo-400">Resume</span>
+        </h1>
+        <p className="text-slate-400 text-lg max-w-xl mx-auto font-light">
+          Drop your PDF below. Our AI will analyze it against your target role and give you a brutal, actionable breakdown.
         </p>
       </div>
 
       {/* Drop zone */}
-      <div
-        className={dropzoneClass}
-        onDrop={onDrop}
-        onDragOver={onDragOver}
-        onDragLeave={onDragLeave}
-        onClick={() => inputRef.current?.click()}
-        role="button"
-        aria-label="Upload resume file"
-        tabIndex={0}
-        onKeyDown={e => e.key === 'Enter' && inputRef.current?.click()}
-      >
-        <input
-          ref={inputRef}
-          type="file"
-          accept=".pdf"
-          className="hidden"
-          onChange={onInputChange}
-        />
+      <div className="relative group">
+        {/* Animated border gradient */}
+        <div className={`absolute -inset-1 rounded-3xl blur-md transition-all duration-500 ${state === 'dragging' ? 'bg-gradient-to-r from-violet-600 to-indigo-600 opacity-70' : 'bg-gradient-to-r from-white/5 to-white/5 opacity-0 group-hover:opacity-100 group-hover:from-violet-600/30 group-hover:to-indigo-600/30'}`}></div>
+        
+        <div
+          className={`
+            relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed
+            p-14 text-center cursor-pointer transition-all duration-300 backdrop-blur-sm
+            ${state === 'dragging'
+              ? 'border-violet-400 bg-violet-500/10 shadow-[0_0_30px_rgba(139,92,246,0.15)] scale-[1.02]'
+              : file
+              ? 'border-violet-500/40 bg-violet-500/5'
+              : 'border-white/10 bg-slate-900/50 hover:border-violet-500/40 hover:bg-white/5'}
+          `}
+          onDrop={onDrop}
+          onDragOver={onDragOver}
+          onDragLeave={onDragLeave}
+          onClick={() => inputRef.current?.click()}
+          role="button"
+          aria-label="Upload resume file"
+          tabIndex={0}
+          onKeyDown={e => e.key === 'Enter' && inputRef.current?.click()}
+        >
+          <input
+            ref={inputRef}
+            type="file"
+            accept=".pdf"
+            className="hidden"
+            onChange={onInputChange}
+          />
 
-        {file ? (
-          <>
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-500/20 text-3xl">
-              📄
+          {file ? (
+            <div className="flex flex-col items-center animate-fade-in-up">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/25 mb-4">
+                <FileText className="w-8 h-8 text-white" />
+              </div>
+              <p className="text-lg font-bold text-white">{file.name}</p>
+              <p className="mt-1 text-sm text-slate-400">
+                {(file.size / 1024).toFixed(1)} KB · Click to replace
+              </p>
             </div>
-            <p className="mb-1 font-semibold text-violet-300">{file.name}</p>
-            <p className="text-sm text-slate-400">{(file.size / 1024).toFixed(1)} KB · Click to replace</p>
-          </>
-        ) : (
-          <>
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 text-3xl">
-              📤
+          ) : (
+            <div className="flex flex-col items-center text-slate-400">
+              <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mb-4 group-hover:bg-violet-500/20 group-hover:text-violet-300 transition-colors duration-300 border border-white/5 group-hover:border-violet-500/30">
+                <UploadCloud className="w-8 h-8 transition-transform duration-300 group-hover:-translate-y-1" />
+              </div>
+              <p className="mb-2 text-lg font-semibold text-slate-200">
+                Drag & drop your resume here
+              </p>
+              <p className="text-sm">or click to browse from your computer</p>
+              <p className="mt-4 text-xs text-slate-500">PDF only (Max 10MB)</p>
             </div>
-            <p className="mb-1 font-semibold">Drag & drop your resume here</p>
-            <p className="text-sm text-slate-400">or click to browse · PDF only</p>
-          </>
-        )}
+          )}
+        </div>
       </div>
 
-      {/* Error state */}
-      {state === 'error' && errorMessage && (
-        <div className="mt-3 rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-center text-sm text-red-400">
-          ⚠️ {errorMessage}
+      {state === 'error' && (
+        <div className="mt-6 flex items-center justify-center gap-3 rounded-xl bg-red-500/10 border border-red-500/20 px-6 py-4 text-red-400 animate-fade-in-up">
+          <AlertCircle className="w-5 h-5" />
+          <p className="text-sm font-medium">{errorMessage}</p>
         </div>
       )}
 
-      {/* Email (optional, for Growth Tracker) */}
-      <div className="mt-6">
-        <label className="mb-2 block text-sm font-medium text-slate-300" htmlFor="email">
-          Email <span className="text-slate-500 text-xs font-normal">(optional — required to use Growth Tracker)</span>
-        </label>
-        <input
-          id="email"
-          type="email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          placeholder="you@example.com"
-          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-slate-500 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
-        />
-      </div>
+      {/* Form Fields */}
+      <div className="mt-10 space-y-6 glass-panel p-8 rounded-3xl">
+        <div>
+          <label className="mb-2 block text-sm font-medium text-slate-300" htmlFor="email">
+            Email <span className="text-slate-500 text-xs font-normal">(optional — required to use Growth Tracker)</span>
+          </label>
+          <input
+            id="email"
+            type="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-slate-500 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+          />
+        </div>
 
-      {/* Target Role Dropdown */}
-      <div className="mt-6">
-        <label className="mb-2 block text-sm font-medium text-slate-300" htmlFor="targetRole">
-          Target Role <span className="text-red-400">*</span>
-        </label>
-        <select
-          id="targetRole"
-          value={targetRole}
-          onChange={e => setTargetRole(e.target.value)}
-          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
-        >
-          <option value="" disabled className="bg-slate-900">
-            Select your target role…
-          </option>
-          {roles.map(role => (
-            <option key={role} value={role} className="bg-slate-900">
-              {role}
+        {/* Target Role Dropdown */}
+        <div>
+          <label className="mb-2 block text-sm font-medium text-slate-300" htmlFor="targetRole">
+            Target Role <span className="text-red-400">*</span>
+          </label>
+          <select
+            id="targetRole"
+            value={targetRole}
+            onChange={e => setTargetRole(e.target.value)}
+            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+          >
+            <option value="" disabled className="bg-slate-900">
+              Select your target role…
             </option>
-          ))}
-        </select>
+            {roles.map(role => (
+              <option key={role} value={role} className="bg-slate-900">
+                {role}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
-      {/* Progress bar */}
-      {state === 'uploading' && (
-        <div className="mt-6">
-          <div className="mb-2 flex items-center justify-between text-sm">
-            <span className="text-slate-400">Analyzing your resume…</span>
-            <span className="font-medium text-violet-400">{Math.round(progress)}%</span>
-          </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
+      {/* Submit Button */}
+      <div className="mt-10 text-center">
+        <button
+          onClick={uploadAndAnalyze}
+          disabled={!canSubmit}
+          className={`
+            relative group overflow-hidden w-full sm:w-auto rounded-2xl px-12 py-4 text-lg font-bold transition-all duration-300
+            ${canSubmit
+              ? 'bg-white text-slate-900 hover:scale-105 hover:shadow-[0_0_40px_8px_rgba(255,255,255,0.2)]'
+              : 'bg-white/5 text-slate-500 cursor-not-allowed border border-white/5'}
+          `}
+        >
+          <span className={`relative z-10 flex items-center justify-center gap-2 ${state === 'uploading' ? 'opacity-0' : 'opacity-100'}`}>
+            {state === 'done' ? <CheckCircle2 className="w-5 h-5" /> : null}
+            {state === 'done' ? 'Analysis Complete' : 'Analyze My Resume'}
+          </span>
+
+          {state === 'uploading' && (
+            <div className="absolute inset-0 flex items-center justify-center gap-3 z-20 text-slate-900">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span>Analyzing ({progress}%)</span>
+            </div>
+          )}
+
+          {/* Progress bar background fill */}
+          {state === 'uploading' && (
             <div
-              className="h-full rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 transition-all duration-200"
+              className="absolute left-0 top-0 bottom-0 bg-violet-400 transition-all duration-300 ease-out z-10"
               style={{ width: `${progress}%` }}
             />
-          </div>
-        </div>
-      )}
-
-      {/* Submit button */}
-      <button
-        onClick={uploadAndAnalyze}
-        disabled={!canSubmit}
-        className="mt-8 w-full rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 py-3.5 font-semibold shadow-lg shadow-violet-500/20 transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
-      >
-        {state === 'uploading'
-          ? '🔍 Analyzing…'
-          : state === 'done'
-          ? '✓ Done! Redirecting…'
-          : 'Analyze My Resume'}
-      </button>
-
-      {/* Privacy note */}
-      <p className="mt-4 text-center text-xs text-slate-500">
-        🔒 Your resume is processed securely and never shared with third parties.
-      </p>
+          )}
+        </button>
+        <p className="mt-4 text-xs text-slate-500 flex items-center justify-center gap-1">
+          <span>Protected by AES-256 encryption. We never share your data.</span>
+        </p>
+      </div>
     </main>
   )
 }

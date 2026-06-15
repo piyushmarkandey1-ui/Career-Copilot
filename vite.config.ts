@@ -12,11 +12,12 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 5173,
       proxy: {
-        // Proxy /api/* → Express server in development so there are no CORS issues
         '/api': {
-          target: env.VITE_API_URL || 'http://localhost:5000',
+          target: 'http://localhost:5000',
           changeOrigin: true,
           secure: false,
+          proxyTimeout: 60000,
+          timeout: 60000,
         },
       },
     },

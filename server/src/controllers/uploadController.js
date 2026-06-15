@@ -7,7 +7,7 @@
  * - Returns structured JSON: metadata + extracted text
  */
 
-const { PDFParse } = require('pdf-parse');
+const { extractTextFromPDF } = require('../services/pdfExtractor');
 
 /**
  * POST /api/upload
@@ -40,13 +40,10 @@ const uploadAndExtract = async (req, res) => {
   let pages = 0;
   let pdfVersion = null;
   try {
-    const parser = new PDFParse({ data: req.file.buffer });
-    await parser.load();
-    // getText() returns { pages: [...], text: string, total: number }
-    const rawOutput = await parser.getText();
-    text = (rawOutput && rawOutput.text) ? rawOutput.text : '';
-    pages = (rawOutput && rawOutput.total) ? rawOutput.total : 0;
-    // metadata not exposed in this version of pdf-parse
+    const result = await extractTextFromPDF(req.file.buffer);
+    text = result.text || '';
+    pages = result.numpages || 0;
+    pdfVersion = null; // pdfjs-dist doesn't expose format version
   } catch (err) {
     return res.status(422).json({
       success: false,

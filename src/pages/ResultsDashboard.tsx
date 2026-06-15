@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 
 interface AnalysisData {
@@ -12,6 +13,13 @@ interface AnalysisData {
   summary: string
   resume_specific_observations?: string[]
   generic_feedback_detected?: boolean
+  simple_review?: {
+    summary: string
+    strengths: string[]
+    weaknesses: string[]
+    improvement_roadmap: string[]
+    section_feedback: { section: string; feedback: string }[]
+  }
 }
 
 interface LocationState {
@@ -101,12 +109,44 @@ export default function ResultsDashboard() {
       "Create a dedicated 'System Architecture' bullet for your most recent role.",
       "Categorize the skills section into 'Languages', 'Frameworks', 'Tools', etc."
     ],
+    simple_review: {
+      summary: "You have a good start, but you need to show proof of your skills and organize things better.",
+      strengths: [
+        "You know modern tools.",
+        "Your projects prove you can build real things.",
+        "Your career shows growth."
+      ],
+      weaknesses: [
+        "You don't mention results or numbers.",
+        "You're missing advanced skills.",
+        "Some old skills shouldn't be here."
+      ],
+      improvement_roadmap: [
+        "Add numbers to your bullet points.",
+        "Link your projects.",
+        "Talk about how you designed systems.",
+        "Group your skills neatly."
+      ],
+      section_feedback: [
+        { section: "Structure", feedback: "It's neat, but grouping your skills will make it easier to read." },
+        { section: "Projects", feedback: "Good projects! Just add links so people can actually see them." },
+        { section: "Skills", feedback: "Remove old stuff like jQuery and focus on what you're best at." },
+        { section: "Role Fit", feedback: "You're ready for mid-level jobs, but not senior ones yet." }
+      ]
+    }
   }
 
   const analysis = state?.analysis || mockData
   const filename = state?.filename || 'sample-resume.pdf'
   const targetRole = state?.targetRole || 'Frontend Developer'
   const email = state?.email || null
+
+  const [viewMode, setViewMode] = useState<'detailed' | 'simplified'>('detailed')
+  const isSimple = viewMode === 'simplified' && analysis.simple_review
+  const displaySummary = isSimple ? analysis.simple_review!.summary : analysis.summary
+  const displayStrengths = isSimple ? analysis.simple_review!.strengths : analysis.strengths
+  const displayWeaknesses = isSimple ? analysis.simple_review!.weaknesses : analysis.weaknesses
+  const displayRoadmap = isSimple ? analysis.simple_review!.improvement_roadmap : analysis.improvement_roadmap
 
   const scoreColor =
     analysis.readiness_score >= 80
@@ -126,12 +166,35 @@ export default function ResultsDashboard() {
             <span className="font-medium text-violet-400">{targetRole}</span>
           </p>
         </div>
-        <Link
-          to="/upload"
-          className="rounded-xl border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-medium transition hover:bg-white/10"
-        >
-          ↑ Upload New Resume
-        </Link>
+        <div className="flex flex-col sm:flex-row gap-3">
+          {/* View Toggle */}
+          {analysis.simple_review && (
+            <div className="flex rounded-xl border border-white/10 bg-white/5 p-1">
+              <button
+                onClick={() => setViewMode('detailed')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  viewMode === 'detailed' ? 'bg-violet-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Detailed Review
+              </button>
+              <button
+                onClick={() => setViewMode('simplified')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  viewMode === 'simplified' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Simplified Review
+              </button>
+            </div>
+          )}
+          <Link
+            to="/upload"
+            className="rounded-xl border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-medium transition hover:bg-white/10 flex items-center"
+          >
+            ↑ Upload New
+          </Link>
+        </div>
       </div>
 
       {/* Readiness Score */}
@@ -146,11 +209,11 @@ export default function ResultsDashboard() {
           <div className="flex-1 text-center md:text-left">
             <div className="mb-4">
               <span className="text-sm font-medium uppercase tracking-widest text-slate-400">
-                Summary
+                {isSimple ? 'Simplified Summary' : 'Summary'}
               </span>
             </div>
             <p className={`text-2xl font-bold leading-relaxed ${scoreColor}`}>
-              "{analysis.summary}"
+              "{displaySummary}"
             </p>
             <div className="mt-6">
               {analysis.readiness_score >= 80 ? (
@@ -174,10 +237,10 @@ export default function ResultsDashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
         {/* Strengths */}
-        <section className="rounded-2xl border border-white/10 bg-white/5 p-6">
-          <h2 className="mb-5 text-xl font-bold text-emerald-400">✅ Strengths</h2>
+        <section className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-6">
+          <h2 className="mb-5 text-xl font-bold text-emerald-400">✅ {isSimple ? 'What You Did Well' : 'Strengths'}</h2>
           <ul className="space-y-3">
-            {analysis.strengths.map((strength, i) => (
+            {displayStrengths.map((strength, i) => (
               <li key={i} className="flex gap-3 text-slate-200">
                 <span className="shrink-0 text-emerald-500">•</span>
                 <span className="leading-relaxed">{strength}</span>
@@ -187,10 +250,10 @@ export default function ResultsDashboard() {
         </section>
 
         {/* Weaknesses */}
-        <section className="rounded-2xl border border-white/10 bg-white/5 p-6">
-          <h2 className="mb-5 text-xl font-bold text-amber-400">⚠️ Weaknesses</h2>
+        <section className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-6">
+          <h2 className="mb-5 text-xl font-bold text-amber-400">⚠️ {isSimple ? 'What Needs Fixing' : 'Weaknesses'}</h2>
           <ul className="space-y-3">
-            {analysis.weaknesses.map((weakness, i) => (
+            {displayWeaknesses.map((weakness, i) => (
               <li key={i} className="flex gap-3 text-slate-200">
                 <span className="shrink-0 text-amber-500">•</span>
                 <span className="leading-relaxed">{weakness}</span>
@@ -202,27 +265,40 @@ export default function ResultsDashboard() {
 
       {/* Detailed Feedback Sections */}
       <section className="mb-8 space-y-6">
-        <h2 className="text-xl font-bold">Detailed Feedback</h2>
+        <h2 className="text-xl font-bold">{isSimple ? 'Feedback Explained Simply' : 'Detailed Feedback'}</h2>
         
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-          <h3 className="mb-2 text-lg font-semibold text-violet-400">Resume Structure</h3>
-          <p className="leading-relaxed text-slate-200">{analysis.resume_structure_feedback}</p>
-        </div>
+        {isSimple && analysis.simple_review ? (
+          <>
+            {analysis.simple_review.section_feedback.map((sf, i) => (
+              <div key={i} className="rounded-2xl border border-white/10 bg-white/5 p-6">
+                <h3 className="mb-2 text-lg font-semibold text-emerald-400">{sf.section}</h3>
+                <p className="leading-relaxed text-slate-200">{sf.feedback}</p>
+              </div>
+            ))}
+          </>
+        ) : (
+          <>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+              <h3 className="mb-2 text-lg font-semibold text-violet-400">Resume Structure</h3>
+              <p className="leading-relaxed text-slate-200">{analysis.resume_structure_feedback}</p>
+            </div>
 
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-          <h3 className="mb-2 text-lg font-semibold text-violet-400">Projects & Experience</h3>
-          <p className="leading-relaxed text-slate-200">{analysis.project_feedback}</p>
-        </div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+              <h3 className="mb-2 text-lg font-semibold text-violet-400">Projects & Experience</h3>
+              <p className="leading-relaxed text-slate-200">{analysis.project_feedback}</p>
+            </div>
 
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-          <h3 className="mb-2 text-lg font-semibold text-violet-400">Skills Alignment</h3>
-          <p className="leading-relaxed text-slate-200">{analysis.skills_feedback}</p>
-        </div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+              <h3 className="mb-2 text-lg font-semibold text-violet-400">Skills Alignment</h3>
+              <p className="leading-relaxed text-slate-200">{analysis.skills_feedback}</p>
+            </div>
 
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-          <h3 className="mb-2 text-lg font-semibold text-violet-400">Target Role Fit</h3>
-          <p className="leading-relaxed text-slate-200">{analysis.target_role_fit}</p>
-        </div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+              <h3 className="mb-2 text-lg font-semibold text-violet-400">Target Role Fit</h3>
+              <p className="leading-relaxed text-slate-200">{analysis.target_role_fit}</p>
+            </div>
+          </>
+        )}
       </section>
 
       {/* Resume-Specific Observations */}
@@ -244,9 +320,9 @@ export default function ResultsDashboard() {
       )}
       {/* Fix It Roadmap */}
       <section className="mb-12">
-        <h2 className="mb-5 text-xl font-bold">🛣️ Improvement Roadmap</h2>
+        <h2 className="mb-5 text-xl font-bold">🛣️ {isSimple ? 'Step-by-Step Fixes' : 'Improvement Roadmap'}</h2>
         <div className="space-y-4">
-          {analysis.improvement_roadmap.map((item, i) => (
+          {displayRoadmap.map((item, i) => (
             <div
               key={i}
               className="flex items-center gap-4 rounded-xl border border-white/10 bg-white/5 p-5 transition hover:border-violet-500/30 hover:bg-white/[0.07]"
@@ -264,8 +340,8 @@ export default function ResultsDashboard() {
       <div className="mb-8 rounded-2xl border border-white/10 bg-white/5 p-6">
         <h3 className="mb-4 font-semibold">Your Progress</h3>
         <div className="mb-2 flex items-center justify-between text-sm">
-          <span className="text-slate-400">Roadmap completion</span>
-          <span className="font-medium">0 / {analysis.improvement_roadmap.length} steps</span>
+          <span className="text-slate-400">{isSimple ? 'Tasks Done' : 'Roadmap completion'}</span>
+          <span className="font-medium">0 / {displayRoadmap.length} steps</span>
         </div>
         <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
           <div className="h-full w-0 rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 transition-all duration-500" />

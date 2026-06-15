@@ -1,3 +1,14 @@
+// Polyfill DOM objects for pdf-parse to run in serverless environments
+if (typeof global.DOMMatrix === 'undefined') {
+  global.DOMMatrix = class DOMMatrix {};
+}
+if (typeof global.ImageData === 'undefined') {
+  global.ImageData = class ImageData {};
+}
+if (typeof global.Path2D === 'undefined') {
+  global.Path2D = class Path2D {};
+}
+
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
@@ -13,21 +24,9 @@ const historyRoutes = require('./routes/historyRoutes');
 
 const app = express();
 
-// ─── CORS ────────────────────────────────────────────────────────────────────
-const allowedOrigins = (process.env.CLIENT_ORIGIN || 'http://localhost:5173')
-  .split(',')
-  .map((o) => o.trim());
-
 app.use(
   cors({
-    origin: (origin, callback) => {
-      // allow requests with no origin (e.g. curl, Postman)
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error(`CORS: origin "${origin}" not allowed`));
-      }
-    },
+    origin: true, // true mirrors the requesting origin, allowing dynamic Vercel URLs
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
@@ -35,8 +34,21 @@ app.use(
 );
 
 // ─── Core Middleware ──────────────────────────────────────────────────────────
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
+// Only parse JSON/urlencoded bodies for non-multipart requests.
+// For multipart/form-data (file uploads), multer handles body parsing — if
+// express.json() runs first it consumes the stream and multer gets nothing.
+app.use((req, res, next) => {
+  if (req.headers['content-type'] && req.headers['content-type'].startsWith('multipart/form-data')) {
+    return next(); // skip — multer will handle it
+  }
+  express.json({ limit: '10mb' })(req, res, next);
+});
+app.use((req, res, next) => {
+  if (req.headers['content-type'] && req.headers['content-type'].startsWith('multipart/form-data')) {
+    return next();
+  }
+  express.urlencoded({ extended: true })(req, res, next);
+});
 
 if (process.env.NODE_ENV !== 'test') {
   app.use(morgan('dev'));

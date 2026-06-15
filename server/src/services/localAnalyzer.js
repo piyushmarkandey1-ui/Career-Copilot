@@ -556,6 +556,18 @@ function analyzeLocally(resumeText, targetRole) {
     improvement_roadmap: roadmap.slice(0, 6),
     resume_specific_observations: observations.slice(0, 5),
     generic_feedback_detected: false,
+    simple_review: {
+      summary: summary,
+      strengths: strengths.slice(0, 5).map(s => `Good: ${s}`),
+      weaknesses: weaknesses.slice(0, 5).map(w => `Needs Fix: ${w}`),
+      improvement_roadmap: roadmap.slice(0, 6).map(r => `Action: ${r}`),
+      section_feedback: [
+        { section: 'Structure', feedback: structureFeedback },
+        { section: 'Projects', feedback: projectFeedback },
+        { section: 'Skills', feedback: skillsFeedback },
+        { section: 'Role Fit', feedback: targetRoleFit }
+      ]
+    }
   };
 }
 

@@ -9,7 +9,8 @@
  * Production → Vercel env  → VITE_API_URL=https://your-app.up.railway.app
  */
 
-const BASE_URL = (import.meta.env.VITE_API_URL as string) || 'http://localhost:5000'
+// Always use relative paths — Vite dev proxy forwards to backend, Vercel rewrites handle production
+const BASE_URL = ''
 
 // ── Generic request helper ────────────────────────────────────────────────────
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
