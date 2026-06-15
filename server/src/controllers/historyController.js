@@ -208,4 +208,48 @@ const getHistory = async (req, res) => {
   }
 };
 
-module.exports = { saveHistory, getHistory };
+// ── DELETE /api/history?email= ───────────────────────────────────────────────
+const clearHistory = async (req, res) => {
+  const { email } = req.query;
+
+  if (!email || !isValidEmail(email)) {
+    return res.status(422).json({
+      success: false,
+      message: 'A valid email query param is required.',
+    });
+  }
+
+  const userEmail = email.trim().toLowerCase();
+
+  try {
+    const supabase = getSupabase();
+    
+    const { error } = await supabase
+      .from('resume_history')
+      .delete()
+      .eq('email', userEmail);
+
+    if (error) throw error;
+
+    return res.status(200).json({
+      success: true,
+      message: 'All resume history has been cleared successfully.',
+    });
+  } catch (err) {
+    console.error('[Supabase] history delete error:', err.message);
+    
+    // In-Memory Fallback: Remove all records for this email
+    for (let i = localMemoryStore.length - 1; i >= 0; i--) {
+      if (localMemoryStore[i].email === userEmail) {
+        localMemoryStore.splice(i, 1);
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'All resume history cleared from local session memory.',
+    });
+  }
+};
+
+module.exports = { saveHistory, getHistory, clearHistory };

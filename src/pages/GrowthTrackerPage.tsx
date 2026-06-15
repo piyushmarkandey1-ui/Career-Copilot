@@ -240,7 +240,7 @@ export default function GrowthTrackerPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [fetched, setFetched] = useState(false)
-  const [persisted, setPersisted] = useState(true)
+  const [isClearing, setIsClearing] = useState(false)
 
   // ── Fetch history ───────────────────────────────────────────────────────────
   async function fetchHistory(email: string) {
@@ -255,7 +255,6 @@ export default function GrowthTrackerPage() {
       if (!res.ok) throw new Error(json.message || 'Failed to fetch history.')
       setAllRecords(json.data ?? [])
       setAvailableRoles(json.available_roles ?? [])
-      setPersisted(json.persisted !== false)
       setSubmittedEmail(trimmed)
       setSelectedRole('')
       setFetched(true)
@@ -263,6 +262,31 @@ export default function GrowthTrackerPage() {
       setError(e instanceof Error ? e.message : 'Something went wrong.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  // ── Clear history ───────────────────────────────────────────────────────────
+  async function clearHistory() {
+    if (!submittedEmail) return
+    if (!window.confirm('Are you sure you want to permanently delete all history for this email? This will give you a fresh start.')) return
+
+    setIsClearing(true)
+    setError('')
+    try {
+      const url = `${API_URL}/api/history?email=${encodeURIComponent(submittedEmail)}`
+      const res = await fetch(url, { method: 'DELETE' })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.message || 'Failed to clear history.')
+      
+      // Reset state for a fresh start
+      setAllRecords([])
+      setAvailableRoles([])
+      setSelectedRole('')
+      alert('History cleared successfully. You now have a fresh start!')
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Something went wrong while clearing history.')
+    } finally {
+      setIsClearing(false)
     }
   }
 
@@ -350,16 +374,18 @@ export default function GrowthTrackerPage() {
           >
             {loading ? 'Loading…' : 'Fetch'}
           </button>
+          {allRecords.length > 0 && (
+            <button
+              onClick={clearHistory}
+              disabled={isClearing}
+              className="rounded-xl border border-red-500/30 bg-red-500/10 px-6 py-3 font-semibold text-red-400 transition hover:bg-red-500/20 disabled:opacity-40"
+            >
+              {isClearing ? 'Clearing…' : 'Clear History'}
+            </button>
+          )}
         </div>
         {error && <p className="mt-3 text-sm text-red-400">⚠️ {error}</p>}
       </div>
-
-      {/* DB not connected warning */}
-      {fetched && !persisted && (
-        <div className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-300">
-          ⚠️ <strong>Database not connected.</strong> Your analyses are temporarily saved in the server's session memory and will be lost on restart. To enable permanent tracking, connect Supabase and add your credentials to the server environment.
-        </div>
-      )}
 
       {/* ── Results ─────────────────────────────────────────────────────────── */}
       {fetched && (
@@ -408,7 +434,7 @@ export default function GrowthTrackerPage() {
                   <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
                     <div className="rounded-2xl border border-white/10 bg-white/5 p-5 text-center">
                       <p className="text-3xl font-extrabold text-violet-400">{records.length}</p>
-                      <p className="mt-1 text-xs text-slate-400">Versions Tracked</p>
+                      <p className="mt-1 text-xs text-slate-400">Distinct Resumes Uploaded</p>
                     </div>
                     <div className="rounded-2xl border border-white/10 bg-white/5 p-5 text-center">
                       <p className="text-3xl font-extrabold" style={{ color: scoreColor(last.readiness_score) }}>
