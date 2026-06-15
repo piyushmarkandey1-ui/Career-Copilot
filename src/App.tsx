@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom'
 import LandingPage from './pages/LandingPage'
 import UploadResumePage from './pages/UploadResumePage'
 import ResultsDashboard from './pages/ResultsDashboard'
+import GrowthTrackerPage from './pages/GrowthTrackerPage'
 import Navbar from './components/Navbar'
 
 function App() {
@@ -12,6 +13,7 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/upload" element={<UploadResumePage />} />
         <Route path="/results" element={<ResultsDashboard />} />
+        <Route path="/tracker" element={<GrowthTrackerPage />} />
       </Routes>
     </div>
   )

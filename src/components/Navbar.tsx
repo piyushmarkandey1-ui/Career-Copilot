@@ -16,6 +16,7 @@ export default function Navbar() {
     { path: '/', label: 'Home' },
     { path: '/upload', label: 'Upload Resume' },
     { path: '/results', label: 'Dashboard' },
+    { path: '/tracker', label: '📈 Growth Tracker' },
   ]
 
   return (

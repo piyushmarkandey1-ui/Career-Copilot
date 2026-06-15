@@ -9,6 +9,7 @@ const healthRoutes = require('./routes/healthRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const analyzeRoutes = require('./routes/analyzeRoutes');
 const resultRoutes = require('./routes/resultRoutes');
+const historyRoutes = require('./routes/historyRoutes');
 
 const app = express();
 
@@ -46,6 +47,7 @@ app.use('/api/health', healthRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/analyze', analyzeRoutes);
 app.use('/api/save-result', resultRoutes);
+app.use('/api/history', historyRoutes);
 app.use('/api/resume', resumeRoutes);
 
 // ─── 404 catch-all ───────────────────────────────────────────────────────────

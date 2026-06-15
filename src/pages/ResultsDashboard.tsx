@@ -16,6 +16,7 @@ interface LocationState {
   analysis?: AnalysisData
   filename?: string
   targetRole?: string
+  email?: string | null
 }
 
 function ScoreRing({ score }: { score: number }) {
@@ -103,6 +104,7 @@ export default function ResultsDashboard() {
   const analysis = state?.analysis || mockData
   const filename = state?.filename || 'sample-resume.pdf'
   const targetRole = state?.targetRole || 'Frontend Developer'
+  const email = state?.email || null
 
   const scoreColor =
     analysis.readiness_score >= 80
@@ -260,12 +262,20 @@ export default function ResultsDashboard() {
         <p className="mb-6 text-slate-400">
           Upload your updated resume anytime to see your progress and get fresh feedback.
         </p>
-        <Link
-          to="/upload"
-          className="inline-block rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-8 py-3 font-semibold shadow-lg shadow-violet-500/20 transition hover:opacity-90"
-        >
-          Upload Updated Resume
-        </Link>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Link
+            to="/upload"
+            className="inline-block rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-8 py-3 font-semibold shadow-lg shadow-violet-500/20 transition hover:opacity-90"
+          >
+            Upload Updated Resume
+          </Link>
+          <Link
+            to={email ? `/tracker?email=${encodeURIComponent(email)}` : '/tracker'}
+            className="inline-block rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-8 py-3 font-semibold text-emerald-400 transition hover:bg-emerald-500/20"
+          >
+            📈 View Growth Tracker
+          </Link>
+        </div>
       </div>
     </main>
   )

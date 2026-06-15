@@ -158,13 +158,37 @@ const analyzeResume = async (req, res) => {
     }
   }
 
+  const responseData = {
+    targetRole,
+    wordCount: resumeText.split(/\s+/).filter(Boolean).length,
+    ...analysis,
+  };
+
+  // ── Fire-and-forget: save to history if email provided ────────────────────
+  const email = (req.body?.email || '').trim();
+  if (email) {
+    try {
+      const { saveHistory } = require('./historyController');
+      // Build a synthetic req/res to reuse the controller
+      const fakeRes = { status: () => ({ json: () => {} }) };
+      const fakeReq = {
+        body: {
+          email,
+          target_role: targetRole,
+          readiness_score: analysis.readiness_score,
+          strengths: analysis.strengths,
+          weaknesses: analysis.weaknesses,
+          improvement_roadmap: analysis.improvement_roadmap,
+          full_analysis_json: analysis,
+        },
+      };
+      saveHistory(fakeReq, fakeRes).catch(() => {});
+    } catch (_) { /* silent */ }
+  }
+
   return res.status(200).json({
     success: true,
-    data: {
-      targetRole,
-      wordCount: resumeText.split(/\s+/).filter(Boolean).length,
-      ...analysis,
-    },
+    data: responseData,
   });
 };
 

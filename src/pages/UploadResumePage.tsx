@@ -23,6 +23,7 @@ export default function UploadResumePage() {
   const [state, setState] = useState<UploadState>('idle')
   const [file, setFile] = useState<File | null>(null)
   const [targetRole, setTargetRole] = useState('')
+  const [email, setEmail] = useState('')
   const [progress, setProgress] = useState(0)
   const [errorMessage, setErrorMessage] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
@@ -72,6 +73,7 @@ export default function UploadResumePage() {
       const formData = new FormData()
       formData.append('resume', file)
       formData.append('targetRole', targetRole)
+      if (email.trim()) formData.append('email', email.trim())
 
       // Simulate progress
       const progressInterval = setInterval(() => {
@@ -98,6 +100,7 @@ export default function UploadResumePage() {
               analysis: data.data,
               filename: file.name,
               targetRole: targetRole,
+              email: email.trim() || null,
             },
           })
         }, 500)
@@ -180,8 +183,23 @@ export default function UploadResumePage() {
         </div>
       )}
 
+      {/* Email (optional, for Growth Tracker) */}
+      <div className="mt-6">
+        <label className="mb-2 block text-sm font-medium text-slate-300" htmlFor="email">
+          Email <span className="text-slate-500 text-xs font-normal">(optional — required to use Growth Tracker)</span>
+        </label>
+        <input
+          id="email"
+          type="email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          placeholder="you@example.com"
+          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-slate-500 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+        />
+      </div>
+
       {/* Target Role Dropdown */}
-      <div className="mt-8">
+      <div className="mt-6">
         <label className="mb-2 block text-sm font-medium text-slate-300" htmlFor="targetRole">
           Target Role <span className="text-red-400">*</span>
         </label>
