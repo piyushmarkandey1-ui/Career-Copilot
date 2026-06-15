@@ -10,6 +10,12 @@ const { getSupabase } = require('../services/supabaseClient');
 const isValidEmail = (v) =>
   typeof v === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
 
+// ── In-Memory Fallback Store ──────────────────────────────────────────────────
+// This allows the Growth Tracker to work perfectly with real data during the 
+// current server session even if Supabase is not configured.
+const localMemoryStore = [];
+let memoryIdCounter = 1;
+
 // ── POST /api/history ──────────────────────────────────────────────────────────
 const saveHistory = async (req, res) => {
   const {
@@ -96,10 +102,43 @@ const saveHistory = async (req, res) => {
     });
   } catch (err) {
     console.error('[Supabase] history insert error:', err.message);
-    return res.status(200).json({
+    
+    // In-Memory Fallback
+    const userEmail = email.trim().toLowerCase();
+    const existingRecords = localMemoryStore.filter(r => r.email === userEmail && r.target_role === target_role);
+    const version = resume_version ?? (existingRecords.length + 1);
+
+    const newRecord = {
+      id: `local-${memoryIdCounter++}`,
+      email: userEmail,
+      target_role,
+      resume_version: version,
+      readiness_score: Math.round(readiness_score),
+      ats_score: typeof ats_score === 'number' ? Math.round(ats_score) : null,
+      skills_score: typeof skills_score === 'number' ? Math.round(skills_score) : null,
+      project_score: typeof project_score === 'number' ? Math.round(project_score) : null,
+      layout_score: typeof layout_score === 'number' ? Math.round(layout_score) : null,
+      strengths: strengths ?? [],
+      weaknesses: weaknesses ?? [],
+      improvement_roadmap: improvement_roadmap ?? [],
+      full_analysis_json,
+      analysis_date: new Date().toISOString(),
+    };
+
+    localMemoryStore.push(newRecord);
+
+    return res.status(201).json({
       success: true,
       persisted: false,
-      message: 'Analysis completed but could not be saved — database not configured.',
+      message: 'Analysis saved to local session memory (database not configured).',
+      data: {
+        id: newRecord.id,
+        email: newRecord.email,
+        target_role: newRecord.target_role,
+        resume_version: newRecord.resume_version,
+        readiness_score: newRecord.readiness_score,
+        analysis_date: newRecord.analysis_date,
+      }
     });
   }
 };
@@ -115,6 +154,8 @@ const getHistory = async (req, res) => {
     });
   }
 
+  const userEmail = email.trim().toLowerCase();
+
   try {
     const supabase = getSupabase();
 
@@ -123,7 +164,7 @@ const getHistory = async (req, res) => {
       .select(
         'id, email, target_role, resume_version, readiness_score, ats_score, skills_score, project_score, layout_score, strengths, weaknesses, improvement_roadmap, analysis_date, full_analysis_json'
       )
-      .eq('email', email.trim().toLowerCase())
+      .eq('email', userEmail)
       .order('analysis_date', { ascending: true });
 
     // Optional role filter
@@ -146,13 +187,23 @@ const getHistory = async (req, res) => {
     });
   } catch (err) {
     console.error('[Supabase] history fetch error:', err.message);
-    // No mock data — return empty so the frontend shows the correct empty state
+    
+    // In-Memory Fallback
+    let data = localMemoryStore.filter(r => r.email === userEmail);
+    const allRoles = [...new Set(data.map(r => r.target_role))];
+
+    if (target_role && typeof target_role === 'string' && target_role.trim()) {
+      data = data.filter(r => r.target_role === target_role.trim());
+    }
+
+    data.sort((a, b) => new Date(a.analysis_date).getTime() - new Date(b.analysis_date).getTime());
+
     return res.status(200).json({
       success: true,
       persisted: false,
-      data: [],
-      available_roles: [],
-      message: 'Database not configured. Analyses cannot be retrieved until Supabase is connected.',
+      data,
+      available_roles: allRoles,
+      message: 'Retrieved from local session memory (Supabase not connected).',
     });
   }
 };

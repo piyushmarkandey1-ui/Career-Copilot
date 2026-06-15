@@ -357,7 +357,7 @@ export default function GrowthTrackerPage() {
       {/* DB not connected warning */}
       {fetched && !persisted && (
         <div className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-300">
-          ⚠️ <strong>Database not connected.</strong> Your analyses are not being saved. To enable history tracking, connect Supabase and add your credentials to the server environment.
+          ⚠️ <strong>Database not connected.</strong> Your analyses are temporarily saved in the server's session memory and will be lost on restart. To enable permanent tracking, connect Supabase and add your credentials to the server environment.
         </div>
       )}
 
