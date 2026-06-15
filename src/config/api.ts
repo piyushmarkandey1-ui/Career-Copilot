@@ -42,6 +42,8 @@ export interface AnalysisResult {
   target_role_fit: string
   improvement_roadmap: string[]
   summary: string
+  resume_specific_observations?: string[]
+  generic_feedback_detected?: boolean
 }
 
 export interface SaveResultPayload {

@@ -10,6 +10,8 @@ interface AnalysisData {
   target_role_fit: string
   improvement_roadmap: string[]
   summary: string
+  resume_specific_observations?: string[]
+  generic_feedback_detected?: boolean
 }
 
 interface LocationState {
@@ -223,6 +225,23 @@ export default function ResultsDashboard() {
         </div>
       </section>
 
+      {/* Resume-Specific Observations */}
+      {analysis.resume_specific_observations && analysis.resume_specific_observations.length > 0 && (
+        <section className="mb-8">
+          <h2 className="mb-5 text-xl font-bold">🔍 Resume-Specific Observations</h2>
+          <div className="space-y-3">
+            {analysis.resume_specific_observations.map((obs, i) => (
+              <div
+                key={i}
+                className="flex items-start gap-4 rounded-xl border border-blue-500/20 bg-blue-500/5 p-4"
+              >
+                <span className="mt-0.5 shrink-0 text-blue-400 text-lg">💡</span>
+                <p className="leading-relaxed text-slate-200 text-sm">{obs}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
       {/* Fix It Roadmap */}
       <section className="mb-12">
         <h2 className="mb-5 text-xl font-bold">🛣️ Improvement Roadmap</h2>

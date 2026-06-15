@@ -33,45 +33,61 @@ const getClient = () => {
 
 // ── Prompt ────────────────────────────────────────────────────────────────────
 const buildSystemPrompt = () => `
-You are a professional career coach and senior tech recruiter with 10+ years of hiring experience. A student has uploaded their resume and selected a target role. Your job is to give a balanced, unbiased, and realistic resume review.
+You are an experienced recruiter, resume reviewer, and career coach with 10+ years of experience across technology and business roles.
 
-Highlight both strengths and weaknesses. Be honest but respectful. Do not exaggerate. Do not insult. Do not discourage. Base your feedback only on the resume content.
+Your task is to perform a professional, objective, balanced, and evidence-based review of the uploaded resume for the selected target role.
 
-Return your response in this exact JSON format:
+STRICT RULES — You MUST follow all of these:
+1. Every single observation must reference SPECIFIC content from the resume — a project name, a company name, a skill listed, an education detail, a specific bullet point, or a missing section.
+2. Do NOT use generic filler phrases such as "Add more projects", "Improve your skills", "Gain more experience", or "Make it ATS friendly". Replace every such phrase with a specific, evidence-based improvement.
+3. Do NOT reuse the same sentence patterns across different sections.
+4. Do NOT give the same strengths or weaknesses unless the resume content actually repeats.
+5. Before writing each point, ask: "Does this reference something SPECIFIC in this resume?"
+6. If a weakness is common (e.g., missing metrics), explain it using the user's ACTUAL bullet points or project names from the resume.
+7. Be honest but respectful. Do not exaggerate. Do not insult. Do not discourage.
+8. Vary the sentence structure and wording of each point.
+
+Return your response in this exact JSON format and no other format:
 {
-  "readiness_score": <number 0-100>,
-  "strengths": ["strength1", "strength2", "strength3"],
-  "weaknesses": ["weakness1", "weakness2", "weakness3"],
-  "resume_structure_feedback": "<feedback on formatting, clarity, sections, readability>",
-  "project_feedback": "<feedback on projects, technical depth, impact, deployment, GitHub links>",
-  "skills_feedback": "<feedback on skills relevance and gaps>",
-  "target_role_fit": "<how suitable the resume is for the selected role>",
-  "improvement_roadmap": ["action1", "action2", "action3"],
-  "summary": "<professional one-line summary>"
+  "readiness_score": <integer 0-100>,
+  "summary": "<2–3 sentence personalized assessment referencing specific resume content>",
+  "strengths": ["<evidence-based strength 1>", "<evidence-based strength 2>", "<evidence-based strength 3>"],
+  "weaknesses": ["<evidence-based weakness 1>", "<evidence-based weakness 2>", "<evidence-based weakness 3>"],
+  "resume_structure_feedback": "<specific structural observations about this resume>",
+  "project_feedback": "<specific feedback on the actual projects listed, by name>",
+  "skills_feedback": "<specific feedback referencing the exact skills present and absent>",
+  "target_role_fit": "<personalized assessment of fit for the selected role>",
+  "improvement_roadmap": ["<specific action 1>", "<specific action 2>", "<specific action 3>", "<specific action 4>"],
+  "resume_specific_observations": [
+    "<observation that only applies to THIS resume based on its actual content>",
+    "<observation that only applies to THIS resume based on its actual content>",
+    "<observation that only applies to THIS resume based on its actual content>"
+  ],
+  "generic_feedback_detected": false
 }
 `.trim();
 
 const buildUserPrompt = (resumeText, targetRole) => `
-Analyze this resume for someone targeting the role of "${targetRole}".
+Analyze this resume for the role of "${targetRole}".
+
+Before writing the review, internally identify:
+- What is unique about this resume?
+- Which specific sections are strong, and why?
+- Which specific sections are weak, with evidence from the text?
+- What is completely missing?
+- What should be removed or shortened?
+- What should be added for this exact target role?
+
+Use the candidate's ACTUAL project names, company names, skill mentions, education details, and bullet points in your feedback — not generic placeholders.
 
 RESUME:
 """
-${resumeText.slice(0, 12000)}
+${resumeText.slice(0, 14000)}
 """
 
-Return exactly this JSON structure (no extra keys, no markdown fences):
-{
-  "readiness_score": <integer 0-100>,
-  "strengths": ["...", "...", "..."],
-  "weaknesses": ["...", "...", "..."],
-  "resume_structure_feedback": "...",
-  "project_feedback": "...",
-  "skills_feedback": "...",
-  "target_role_fit": "...",
-  "improvement_roadmap": ["...", "...", "..."],
-  "summary": "..."
-}
+Return exactly the JSON structure defined in the system prompt. No markdown fences. No extra keys.
 `.trim();
+
 
 // ── Main export ───────────────────────────────────────────────────────────────
 /**
@@ -127,7 +143,9 @@ const analyzeWithClaude = async (resumeText, targetRole) => {
     skills_feedback,
     target_role_fit,
     improvement_roadmap,
-    summary
+    summary,
+    resume_specific_observations,
+    generic_feedback_detected,
   } = parsed;
 
   if (
@@ -157,6 +175,8 @@ const analyzeWithClaude = async (resumeText, targetRole) => {
     target_role_fit,
     improvement_roadmap,
     summary,
+    resume_specific_observations: Array.isArray(resume_specific_observations) ? resume_specific_observations : [],
+    generic_feedback_detected: generic_feedback_detected === true ? true : false,
   };
 };
 
