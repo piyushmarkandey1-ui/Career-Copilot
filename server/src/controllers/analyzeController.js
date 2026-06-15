@@ -108,21 +108,58 @@ const analyzeResume = async (req, res) => {
     ...analysis,
   };
 
+  // ── Derive sub-scores from analysis text ───────────────────────────────────
+  // These are approximations based on what the analyzer detected.
+  // When Claude responds they may be present in full_analysis_json already.
+  const textLower = resumeText.toLowerCase();
+
+  const atsScore = Math.min(100, Math.max(0, Math.round(
+    (analysis.readiness_score || 50) +
+    (/github|linkedin/.test(textLower) ? 5 : -5) +
+    (/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/.test(textLower) ? 2 : -2) +
+    (Math.random() * 4 - 2) // small variance per upload
+  )));
+
+  const skillsScore = Math.min(100, Math.max(0, Math.round(
+    analysis.skills_feedback && analysis.skills_feedback.includes('strong')
+      ? (analysis.readiness_score || 50) + 8
+      : (analysis.readiness_score || 50) - 5
+  )));
+
+  const projectScore = Math.min(100, Math.max(0, Math.round(
+    /github\.com\//i.test(resumeText)
+      ? (analysis.readiness_score || 50) + 6
+      : /project/i.test(resumeText)
+        ? (analysis.readiness_score || 50) - 3
+        : (analysis.readiness_score || 50) - 12
+  )));
+
+  const layoutScore = Math.min(100, Math.max(0, Math.round(
+    (() => {
+      const bulletCount = (resumeText.match(/^[-•*▪➤]/gm) || []).length;
+      const sectionCount = ['experience','education','skills','projects','summary','certifications'].filter(s => textLower.includes(s)).length;
+      return 40 + (sectionCount * 6) + Math.min(20, bulletCount * 2);
+    })()
+  )));
+
   // ── Fire-and-forget: save to history if email provided ────────────────────
   const email = (req.body?.email || '').trim();
   if (email) {
     try {
       const { saveHistory } = require('./historyController');
-      // Build a synthetic req/res to reuse the controller
       const fakeRes = { status: () => ({ json: () => {} }) };
       const fakeReq = {
         body: {
           email,
           target_role: targetRole,
           readiness_score: analysis.readiness_score,
+          ats_score: atsScore,
+          skills_score: skillsScore,
+          project_score: projectScore,
+          layout_score: layoutScore,
           strengths: analysis.strengths,
           weaknesses: analysis.weaknesses,
-          improvement_roadmap: analysis.improvement_roadmap,
+          improvement_roadmap: analysis.improvement_roadmap ?? [],
           full_analysis_json: analysis,
         },
       };
