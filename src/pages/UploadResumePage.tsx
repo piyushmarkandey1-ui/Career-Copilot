@@ -1,6 +1,7 @@
 import { useState, useRef, DragEvent, ChangeEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { UploadCloud, FileText, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { BASE_URL } from '../config/api'
 
 type UploadState = 'idle' | 'dragging' | 'uploading' | 'done' | 'error'
@@ -31,12 +32,11 @@ export default function UploadResumePage() {
   function handleFile(f: File) {
     if (f.type !== 'application/pdf') {
       setState('error')
-      setErrorMessage('Only PDF resumes are supported.')
+      toast.error('Only PDF resumes are supported.')
       return
     }
     setFile(f)
     setState('idle')
-    setErrorMessage('')
   }
 
   function onDrop(e: DragEvent<HTMLDivElement>) {
@@ -65,7 +65,6 @@ export default function UploadResumePage() {
 
     setState('uploading')
     setProgress(0)
-    setErrorMessage('')
 
     try {
       // Create form data
@@ -91,6 +90,7 @@ export default function UploadResumePage() {
       const data = await response.json()
 
       if (data.success) {
+        toast.success('Analysis complete!')
         setState('done')
 
         if (email.trim()) {
@@ -120,12 +120,12 @@ export default function UploadResumePage() {
         }, 500)
       } else {
         setState('error')
-        setErrorMessage(data.message || 'Failed to analyze resume')
+        toast.error(data.message || 'Failed to analyze resume')
       }
     } catch (error) {
       console.error('Upload error:', error)
       setState('error')
-      setErrorMessage('Failed to connect to server. Make sure the backend is running.')
+      toast.error('Failed to connect to server. Make sure the backend is running.')
     }
   }
 
@@ -208,12 +208,7 @@ export default function UploadResumePage() {
         </div>
       </div>
 
-      {state === 'error' && (
-        <div className="mt-6 flex items-center justify-center gap-3 rounded-xl bg-red-500/10 border border-red-500/20 px-6 py-4 text-red-400 animate-fade-in-up">
-          <AlertCircle className="w-5 h-5" />
-          <p className="text-sm font-medium">{errorMessage}</p>
-        </div>
-      )}
+
 
       {/* Form Fields */}
       <div className="mt-10 space-y-6 glass-panel p-8 rounded-3xl">
