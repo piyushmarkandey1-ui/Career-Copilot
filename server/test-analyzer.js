@@ -6,7 +6,7 @@
  * Run: node test-analyzer.js
  */
 
-const { analyzeLocally } = require('./src/services/localAnalyzer');
+const { analyzeLocally, detectResumeLocally } = require('./src/services/localAnalyzer');
 
 const resumes = [
   {
@@ -121,17 +121,25 @@ console.log('  LOCAL RESUME ANALYZER — TEST RESULTS');
 console.log('='.repeat(70) + '\n');
 
 resumes.forEach((resume, i) => {
-  const result = analyzeLocally(resume.text, resume.role);
+  const validation = detectResumeLocally(resume.text);
   console.log(`\n[${i + 1}] ${resume.name}`);
-  console.log(`    Role: ${resume.role}`);
-  console.log(`    Score: ${result.readiness_score}/100`);
-  console.log(`    Summary: ${result.summary}`);
-  console.log(`    Strengths (${result.strengths.length}):`);
-  result.strengths.forEach(s => console.log(`      + ${s}`));
-  console.log(`    Weaknesses (${result.weaknesses.length}):`);
-  result.weaknesses.forEach(w => console.log(`      - ${w}`));
-  console.log(`    Skills feedback: ${result.skills_feedback}`);
-  console.log(`    Top roadmap item: ${result.improvement_roadmap[0]}`);
+  console.log(`    Is Resume: ${validation.is_resume} (Confidence: ${validation.confidence}%)`);
+  console.log(`    Missing Sections: [${validation.missing_sections.join(', ')}]`);
+  
+  if (validation.is_resume && validation.confidence >= 70) {
+    const result = analyzeLocally(resume.text, resume.role);
+    console.log(`    Role: ${resume.role}`);
+    console.log(`    Score: ${result.readiness_score}/100`);
+    console.log(`    Summary: ${result.summary}`);
+    console.log(`    Strengths (${result.strengths.length}):`);
+    result.strengths.forEach(s => console.log(`      + ${s}`));
+    console.log(`    Weaknesses (${result.weaknesses.length}):`);
+    result.weaknesses.forEach(w => console.log(`      - ${w}`));
+    console.log(`    Skills feedback: ${result.skills_feedback}`);
+    console.log(`    Top roadmap item: ${result.improvement_roadmap[0]}`);
+  } else {
+    console.log(`    ❌ Aborted: Not a resume (confidence below 70%)`);
+  }
   console.log('');
 });
 

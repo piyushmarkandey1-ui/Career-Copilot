@@ -20,6 +20,11 @@ interface AnalysisData {
     improvement_roadmap: string[]
     section_feedback: { section: string; feedback: string }[]
   }
+  validation?: {
+    is_resume: boolean
+    confidence: number
+    missing_sections: string[]
+  }
 }
 
 interface LocationState {
@@ -88,6 +93,11 @@ export default function ResultsDashboard() {
   // Mock data for when no state is passed (sample view)
   const mockData: AnalysisData = {
     readiness_score: 75,
+    validation: {
+      is_resume: true,
+      confidence: 95,
+      missing_sections: ["Certifications section"]
+    },
     summary: "Strong foundation with good project experience, but needs better metrics and tailored skills formatting to stand out for senior roles.",
     strengths: [
       "Demonstrates solid experience with modern frontend frameworks.",
@@ -196,6 +206,51 @@ export default function ResultsDashboard() {
           </Link>
         </div>
       </div>
+
+      {/* Resume Detection Warning / Confidence */}
+      {analysis.validation && (
+        <div className="mb-8 flex flex-col gap-4">
+          {/* Confidence Indicator */}
+          <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-6 py-4">
+            <div className="flex items-center gap-3">
+              <span className="text-xl">🔍</span>
+              <div>
+                <span className="text-sm text-slate-400 font-medium block">Resume Detection Confidence</span>
+                <span className="text-lg font-bold text-white">
+                  {analysis.validation.confidence}% → {analysis.validation.confidence >= 75 ? 'Likely Resume' : 'Probably Resume'}
+                </span>
+              </div>
+            </div>
+            <div className="h-2 w-32 bg-slate-800 rounded-full overflow-hidden">
+              <div 
+                className={`h-full rounded-full ${analysis.validation.confidence >= 80 ? 'bg-emerald-500' : 'bg-amber-500'}`} 
+                style={{ width: `${analysis.validation.confidence}%` }}
+              ></div>
+            </div>
+          </div>
+
+          {/* Missing Sections Warnings */}
+          {analysis.validation.missing_sections && analysis.validation.missing_sections.length > 0 && (
+            <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-5 text-amber-300">
+              <div className="flex gap-3 items-start">
+                <span className="text-lg mt-0.5">⚠️</span>
+                <div>
+                  <h4 className="font-semibold text-amber-200">Warning: Missing Important Sections</h4>
+                  <p className="mt-1 text-sm text-amber-300/90">
+                    The following standard resume sections were not detected: {' '}
+                    <span className="font-semibold text-white">
+                      {analysis.validation.missing_sections.join(', ')}
+                    </span>.
+                  </p>
+                  <p className="mt-1.5 text-xs text-amber-400/80">
+                    We've still generated the review based on the available content, but we highly recommend adding these sections to pass applicant tracking systems (ATS).
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Readiness Score */}
       <div className="mb-8 rounded-2xl border border-white/10 bg-white/5 p-8">

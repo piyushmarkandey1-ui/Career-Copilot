@@ -45,6 +45,11 @@ export interface AnalysisResult {
   summary: string
   resume_specific_observations?: string[]
   generic_feedback_detected?: boolean
+  validation?: {
+    is_resume: boolean
+    confidence: number
+    missing_sections: string[]
+  }
 }
 
 export interface SaveResultPayload {

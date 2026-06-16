@@ -17,9 +17,6 @@ const roles = [
   'UI/UX Designer',
 ]
 
-// Always use a relative URL so requests go through the Vite dev proxy (no CORS)
-const API_URL = ''
-
 export default function UploadResumePage() {
   const [state, setState] = useState<UploadState>('idle')
   const [file, setFile] = useState<File | null>(null)
@@ -33,7 +30,7 @@ export default function UploadResumePage() {
   function handleFile(f: File) {
     if (f.type !== 'application/pdf') {
       setState('error')
-      setErrorMessage('Only PDF files are supported.')
+      setErrorMessage('Only PDF resumes are supported.')
       return
     }
     setFile(f)
@@ -115,15 +112,7 @@ export default function UploadResumePage() {
     }
   }
 
-  const dropzoneClass = `
-    relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed
-    p-12 text-center cursor-pointer transition-all
-    ${state === 'dragging'
-      ? 'border-violet-400 bg-violet-500/10'
-      : file
-      ? 'border-violet-500/60 bg-violet-500/5'
-      : 'border-white/20 bg-white/5 hover:border-violet-500/50 hover:bg-white/[0.07]'}
-  `
+
 
   const canSubmit = file && targetRole && state !== 'uploading' && state !== 'done'
 

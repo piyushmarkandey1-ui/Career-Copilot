@@ -2,91 +2,111 @@
 
 **Find out why you won't get hired. Then fix it.**
 
-An AI-powered resume analysis application that acts as a tough but fair career coach. It helps job seekers identify weaknesses in their resumes, get actionable feedback, and align their experience with target roles.
-
----
-
-## 🔗 Quick Links for Judges
-
-To test the application locally, use the following links (ensure both servers are running):
-
-- **Frontend Application (UI):** [http://localhost:5173](http://localhost:5173)
-- **Backend API Server:** [http://localhost:5000](http://localhost:5000)
-- **GitHub Repository:** [https://github.com/piyushmarkandey1-ui/Career-Copilot](https://github.com/piyushmarkandey1-ui/Career-Copilot)
+Career Copilot is an AI-powered resume analysis platform designed to act as a tough but fair career coach. It helps students, freshers, and job seekers audit their resumes, detect structural gaps, and track their improvement over time with visual analytics.
 
 ---
 
 ## ✨ Key Features
 
-- 🎯 **Targeted Analysis** - Upload your PDF resume and select your target role.
-- 🤖 **AI-Powered Insights** - Powered by Anthropic's Claude to provide detailed, objective feedback.
-- 📊 **Readiness Score** - Get an instant 0-100 score on how ready your resume is for the selected role.
-- ✅ **Strengths & Weaknesses** - Honest, direct feedback highlighting what works and what doesn't.
-- 📈 **Improvement Roadmap** - Step-by-step actionable advice to improve formatting, metrics, and content.
-- 🎨 **Modern & Responsive UI** - Premium dark theme interface built with Tailwind CSS v4.
+- 🎯 **Advanced Resume Detection & Validation**:
+  - **MIME Restriction**: Only accepts standard PDF format (`.pdf`).
+  - **Structural Verification**: Evaluates layout, name, contacts, and major sections to assign a **Resume Confidence Score** (0-100%).
+  - **Early Abortion**: Files with a confidence score under `70%` (such as research abstracts, articles, or random files) are rejected with a clear message to prevent database pollution.
+  - **Missing Section Detector**: Flags missing sections (e.g. *Skills*, *Education*, *Contact info*) to warn the candidate, while still permitting analysis if the document is clearly a resume.
+- 🔄 **Double Review Engine**:
+  - **Detailed Review**: A deep-dive critique analyzing formatting, SDE metrics, project details, and ATS keywords.
+  - **"Simplify This Review" Toggle**: Instantly translates technical recruiter jargon into plain, student-friendly language (e.g. converting *"lacks quantifiable metrics"* into *"your project explains what it does but doesn't explain the results you achieved"*).
+- 📈 **Growth Tracker**:
+  - Save analysis results by email to track progress across revisions.
+  - Generates charts showing score improvements (ATS, Skills, Projects, Layout, and Readiness) over time.
+  - Operates using permanent Supabase storage, with a seamless fallback to session memory if credentials are not configured.
+- 🎨 **Premium Glassmorphism UI**:
+  - Beautiful responsive dark-theme design featuring subtle animations, custom gradient score rings, and interactive filters.
 
 ---
 
 ## 🛠️ Technology Stack
 
-Our application is built using a modern, scalable, and systematic architecture:
-
-### Frontend Layer
-- **Framework:** React 18
-- **Build Tool:** Vite (for extremely fast HMR and optimized builds)
-- **Language:** TypeScript (for type safety and robust code)
-- **Styling:** Tailwind CSS v4 (Utility-first CSS framework for rapid, responsive UI development)
-- **Routing:** React Router v6
-- **Icons:** Lucide React
-
-### Backend Layer
-- **Runtime:** Node.js
-- **Framework:** Express.js
-- **PDF Processing:** `pdf-parse` (v2 API) for extracting text directly from uploaded buffers without saving to disk.
-- **File Uploads:** `multer` (configured with in-memory storage for security and speed)
-
-### AI Integration
-- **LLM Provider:** Anthropic Claude API
-- **Prompt Engineering:** Custom system prompts engineered to act as a 10+ year Senior Tech Recruiter.
-- **Graceful Fallbacks:** Built-in mock data generation if API keys are missing or rate-limited to ensure an uninterrupted evaluation experience.
+- **Frontend**: React 18, Vite (build server), Tailwind CSS v4, TypeScript, Lucide Icons, Recharts (visualizations).
+- **Backend API**: Node.js, Express.js.
+- **PDF Engine**: `pdfjs-dist` (extracts text directly from binary buffers on-the-fly, avoiding local disk writes).
+- **AI Core**: Anthropic Claude API (`claude-3-5-sonnet` for validation and audits) with a fully functional local rule-based heuristic fallback if API keys are missing.
 
 ---
 
 ## 💻 How to Run Locally
 
-If the servers are not already running, you can start them with:
+Follow these quick steps to get the application running on `localhost`:
 
-**1. Start the Backend API (Terminal 1)**
+### 1. Configure Environments
+
+Create your environment configuration files:
+
+- **Frontend (`.env.local`)**:
+  *(VITE_API_URL is omitted by default so all requests proxy through Vite to avoid CORS issues).*
+  
+- **Backend Server (`server/.env`)**:
+  Create a `.env` file inside the `server/` directory:
+  ```env
+  PORT=5000
+  NODE_ENV=development
+  CLIENT_ORIGIN=http://localhost:5173
+  
+  # Optional: For AI Resume analysis (falls back to local rules if not provided)
+  ANTHROPIC_API_KEY=sk-ant-your-key-here
+  
+  # Optional: For persistent growth tracking (falls back to session memory if not configured)
+  SUPABASE_URL=https://your-project.supabase.co
+  SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+  ```
+
+### 2. Run the Servers
+
+Start the backend and frontend dev servers concurrently from the root directory:
+
 ```bash
-cd server
+# Install root dependencies
 npm install
-npm run dev
+
+# Start both servers (Vite on port 5173, Express on port 5000)
+npm run dev:all
 ```
 
-**2. Start the Frontend UI (Terminal 2)**
-```bash
-npm install
-npm run dev
-```
-
-*(Note: The application includes a fallback mock analysis mode, so it will work perfectly even without configuring an `ANTHROPIC_API_KEY` in the `.env` file!)*
+Visit **[http://localhost:5173](http://localhost:5173)** in your browser!
 
 ---
 
-## 📂 Project Architecture
+## 🧪 Testing
+
+Test the local resume validation and analyzer heuristics using the built-in test suite:
+
+```bash
+node server/test-analyzer.js
+```
+The test verifies validation confidence, missing section extraction, and SDE score results across 4 unique resume profiles (Strong SDE, Average SDE, Weak/Fresher, and a Non-Resume Document).
+
+---
+
+## 📂 Repository Structure
 
 ```text
 Career-Copilot/
 ├── src/                    # React Frontend
-│   ├── components/         # Reusable UI components
-│   ├── pages/              # Main application views
-│   ├── config/             # API configuration and types
-│   └── App.tsx             # Routing setup
+│   ├── components/         # Reusable UI elements (Navbar, Pills)
+│   ├── pages/              # Upload, Results, Growth Tracker, About
+│   ├── config/             # API client configurations and Types
+│   ├── App.tsx             # Route registry
+│   └── main.tsx            # App bootstrap
 ├── server/                 # Express Backend
 │   ├── src/
-│   │   ├── controllers/    # API endpoint handlers
-│   │   ├── middleware/     # Multer and error handlers
-│   │   ├── routes/         # API routing definitions
-│   │   └── services/       # Claude AI integration
-│   └── index.js            # Server entry point
+│   │   ├── controllers/    # API endpoints (Upload, Analyze, History)
+│   │   ├── middleware/     # Multer file handlers and error handlers
+│   │   ├── routes/         # Express Router paths
+│   │   └── services/       # Claude service, local analyzer, pdf extractor
+│   ├── migrations/         # Supabase SQL table schemas
+│   ├── index.js            # Node entry point
+│   └── test-analyzer.js    # Local test suite
+├── package.json            # Monorepo scripts and dependencies
+├── vite.config.ts          # Vite asset building and backend API proxies
+└── tsconfig.json           # TypeScript configuration
 ```

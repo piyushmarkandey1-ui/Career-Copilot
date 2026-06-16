@@ -571,4 +571,59 @@ function analyzeLocally(resumeText, targetRole) {
   };
 }
 
-module.exports = { analyzeLocally };
+function detectResumeLocally(resumeText) {
+  if (!resumeText || resumeText.trim().length < 100) {
+    return {
+      is_resume: false,
+      confidence: 0,
+      missing_sections: ['Too little text']
+    };
+  }
+
+  const textLower = resumeText.toLowerCase();
+
+  // Look for sections
+  const checks = {
+    contact: /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i.test(textLower) || /\b\d{10}\b/.test(textLower) || /phone|email|linkedin|github/i.test(textLower),
+    education: /education|degree|bachelor|b\.tech|b\.e\.|m\.tech|bsc|msc|university|college|school/i.test(textLower),
+    skills: /skills|languages|technologies|proficiencies|expertise/i.test(textLower),
+    experience: /experience|employment|work history|professional background|internship|intern\b|developer|engineer/i.test(textLower),
+    projects: /projects|academic projects|personal projects/i.test(textLower),
+    certifications: /certifications|certificates|achievements|awards/i.test(textLower),
+  };
+
+  const missing_sections = [];
+  if (!checks.contact) missing_sections.push("Contact information");
+  if (!checks.education) missing_sections.push("Education section");
+  if (!checks.skills) missing_sections.push("Skills section");
+  if (!checks.experience) missing_sections.push("Experience section");
+  if (!checks.projects) missing_sections.push("Projects section");
+
+  // Calculate heuristic confidence
+  let confidence = 35; // base confidence
+
+  if (/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i.test(textLower)) confidence += 20; // email check is strong indicator
+  if (checks.education) confidence += 15;
+  if (checks.skills) confidence += 15;
+  if (checks.experience) confidence += 15;
+  if (checks.projects) confidence += 15;
+  if (checks.certifications) confidence += 10;
+
+  const wordCount = resumeText.split(/\s+/).filter(Boolean).length;
+  if (wordCount >= 60 && wordCount <= 1500) confidence += 10;
+
+  const lines = resumeText.split('\n');
+  const bulletLines = lines.filter(l => /^[-•*▪➤]/.test(l.trim())).length;
+  if (bulletLines >= 2) confidence += 10;
+
+  confidence = Math.min(100, confidence);
+  const is_resume = confidence >= 70;
+
+  return {
+    is_resume,
+    confidence,
+    missing_sections
+  };
+}
+
+module.exports = { analyzeLocally, detectResumeLocally };

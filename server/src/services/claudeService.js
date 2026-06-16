@@ -202,4 +202,71 @@ const analyzeWithClaude = async (resumeText, targetRole) => {
   };
 };
 
-module.exports = { analyzeWithClaude };
+/**
+ * Checks if the text represents a valid resume.
+ * @param {string} resumeText
+ * @returns {Promise<{is_resume: boolean, confidence: number, missing_sections: string[]}>}
+ */
+const validateResumeWithClaude = async (resumeText) => {
+  if (!resumeText || resumeText.trim().length < 100) {
+    return {
+      is_resume: false,
+      confidence: 0,
+      missing_sections: ['Too little text']
+    };
+  }
+
+  const client = getClient();
+  const systemPrompt = `You are an AI assistant designed to detect whether a given document is a resume or CV.
+Analyze the document text and look for standard resume components:
+- Name
+- Contact information
+- Education section
+- Skills section
+- Projects section
+- Experience section
+- Certifications
+- Resume-like structure
+
+Determine:
+1. "is_resume": boolean (Set to false if it does not look like a professional resume/CV, e.g. a research paper, article, recipe, code listing, or random text. Set to true if it is a CV/resume, even if some sections are missing)
+2. "confidence": integer (0 to 100) representing how likely this document is a resume. A typical resume has a confidence of 80% or above. A poor/fresher resume might have 70-80%. Non-resumes should be below 70% (usually below 40%).
+3. "missing_sections": array of strings (e.g., "Skills section", "Education section", "Contact information"). Only list standard sections that appear to be completely missing.
+
+Return your response in this exact JSON format, with no other text, markdown formatting or wrappers:
+{
+  "is_resume": <boolean>,
+  "confidence": <integer>,
+  "missing_sections": ["<section name>", ...]
+}`;
+
+  const message = await client.messages.create({
+    model: 'claude-3-5-sonnet-20241022',
+    max_tokens: 1000,
+    system: systemPrompt,
+    messages: [
+      { role: 'user', content: `Verify this document:\n\n${resumeText.slice(0, 8000)}` },
+    ],
+  });
+
+  const rawContent = message.content.find((b) => b.type === 'text')?.text ?? '';
+  const jsonStr = rawContent.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+
+  let parsed;
+  try {
+    parsed = JSON.parse(jsonStr);
+  } catch {
+    throw Object.assign(
+      new Error(`Claude returned non-JSON validation output: ${rawContent.slice(0, 200)}`),
+      { status: 502 }
+    );
+  }
+
+  return {
+    is_resume: typeof parsed.is_resume === 'boolean' ? parsed.is_resume : (parsed.confidence >= 70),
+    confidence: typeof parsed.confidence === 'number' ? Math.min(100, Math.max(0, parsed.confidence)) : 0,
+    missing_sections: Array.isArray(parsed.missing_sections) ? parsed.missing_sections : []
+  };
+};
+
+module.exports = { analyzeWithClaude, validateResumeWithClaude };

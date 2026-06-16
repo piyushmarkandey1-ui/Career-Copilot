@@ -387,6 +387,11 @@ export default function GrowthTrackerPage() {
           )}
         </div>
         {error && <p className="mt-3 text-sm text-red-400">⚠️ {error}</p>}
+        {fetched && !isPersisted && (
+          <div className="mt-4 rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm text-amber-300">
+            ⚠️ Running in session memory mode — history will reset when the server restarts. Configure Supabase to persist data permanently.
+          </div>
+        )}
       </div>
 
 

@@ -14,9 +14,10 @@ export default function Navbar() {
 
   const navLinks = [
     { path: '/', label: 'Home' },
-    { path: '/upload', label: 'Upload Resume' },
-    { path: '/results', label: 'Dashboard' },
-    { path: '/tracker', label: '📈 Growth Tracker' },
+    { path: '/upload', label: 'Analyze Resume' },
+    { path: '/tracker', label: 'Growth Tracker' },
+    { path: '/compare', label: 'Compare Resumes' },
+    { path: '/about', label: 'About' },
   ]
 
   return (

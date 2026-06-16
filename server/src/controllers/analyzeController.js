@@ -13,8 +13,8 @@
  */
 
 const { extractTextFromPDF } = require('../services/pdfExtractor');
-const { analyzeWithClaude } = require('../services/claudeService');
-const { analyzeLocally } = require('../services/localAnalyzer');
+const { analyzeWithClaude, validateResumeWithClaude } = require('../services/claudeService');
+const { analyzeLocally, detectResumeLocally } = require('../services/localAnalyzer');
 
 const SUPPORTED_ROLES = [
   'Software Developer (SDE)',
@@ -65,12 +65,11 @@ const analyzeResume = async (req, res) => {
     });
   }
 
-  // ── Validate inputs ────────────────────────────────────────────────────────
-  if (!resumeText || resumeText.length < 50) {
+  // ── Validate length/text availability ──────────────────────────────────────
+  if (!resumeText || resumeText.trim().length < 100) {
     return res.status(422).json({
       success: false,
-      message:
-        'Resume text is too short. Make sure the PDF contains selectable (non-scanned) text.',
+      message: 'Uploaded PDF contains too little text (under 100 characters). Please ensure your PDF is not empty, corrupted, or a scanned image with no selectable text.',
     });
   }
 
@@ -88,6 +87,24 @@ const analyzeResume = async (req, res) => {
     });
   }
 
+  // ── Run Resume Detection Check ─────────────────────────────────────────────
+  let validation;
+  try {
+    validation = await validateResumeWithClaude(resumeText);
+  } catch (err) {
+    console.error('Claude Resume Validation Error:', err.message);
+    console.log('Falling back to local rule-based resume detection...');
+    validation = detectResumeLocally(resumeText);
+  }
+
+  if (!validation.is_resume || validation.confidence < 70) {
+    return res.status(422).json({
+      success: false,
+      message: `Uploaded file does not appear to be a resume (Confidence: ${validation.confidence}%). Please upload a valid resume PDF.`,
+      validation
+    });
+  }
+
   // ── Call Claude ────────────────────────────────────────────────────────────
   let analysis;
   try {
@@ -101,6 +118,7 @@ const analyzeResume = async (req, res) => {
   const responseData = {
     targetRole,
     wordCount: resumeText.split(/\s+/).filter(Boolean).length,
+    validation,
     ...analysis,
   };
 

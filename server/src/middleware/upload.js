@@ -12,7 +12,7 @@ const fileFilter = (_req, file, cb) => {
     cb(null, true);
   } else {
     cb(
-      Object.assign(new Error('Only PDF files are allowed'), { status: 422 }),
+      Object.assign(new Error('Only PDF resumes are supported.'), { status: 422 }),
       false
     );
   }
