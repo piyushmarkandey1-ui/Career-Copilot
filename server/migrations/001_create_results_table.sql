@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS public.results (
   role        TEXT        NOT NULL,          -- target role string
   score       INTEGER     NOT NULL           -- readiness score 0-100
                           CHECK (score BETWEEN 0 AND 100),
-  ai_result   JSONB       NOT NULL,          -- full Claude response payload
+  ai_result   JSONB       NOT NULL,          -- full Gemini response payload
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

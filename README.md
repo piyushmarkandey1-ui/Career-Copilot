@@ -30,7 +30,7 @@ Career Copilot is an AI-powered resume analysis platform designed to act as a to
 - **Frontend**: React 18, Vite (build server), Tailwind CSS v4, TypeScript, Lucide Icons, Recharts (visualizations).
 - **Backend API**: Node.js, Express.js.
 - **PDF Engine**: `pdfjs-dist` (extracts text directly from binary buffers on-the-fly, avoiding local disk writes).
-- **AI Core**: Anthropic Claude API (`claude-3-5-sonnet` for validation and audits) with a fully functional local rule-based heuristic fallback if API keys are missing.
+- **AI Core**: Google Gemini API (`gemini-1.5-flash` for validation and audits) with a fully functional local rule-based heuristic fallback if API keys are missing.
 
 ---
 
@@ -53,7 +53,7 @@ Create your environment configuration files:
   CLIENT_ORIGIN=http://localhost:5173
   
   # Optional: For AI Resume analysis (falls back to local rules if not provided)
-  ANTHROPIC_API_KEY=sk-ant-your-key-here
+  GEMINI_API_KEY=your-gemini-key-here
   
   # Optional: For persistent growth tracking (falls back to session memory if not configured)
   SUPABASE_URL=https://your-project.supabase.co
@@ -102,7 +102,7 @@ Career-Copilot/
 │   │   ├── controllers/    # API endpoints (Upload, Analyze, History)
 │   │   ├── middleware/     # Multer file handlers and error handlers
 │   │   ├── routes/         # Express Router paths
-│   │   └── services/       # Claude service, local analyzer, pdf extractor
+│   │   └── services/       # Gemini service, local analyzer, pdf extractor
 │   ├── migrations/         # Supabase SQL table schemas
 │   ├── index.js            # Node entry point
 │   └── test-analyzer.js    # Local test suite

@@ -35,7 +35,7 @@ const SUPPORTED_ROLES = [
  *   email      : string | null   (optional)
  *   role       : string          (required — must be a supported role)
  *   score      : number          (required — 0-100 integer)
- *   ai_result  : object          (required — full Claude payload)
+ *   ai_result  : object          (required — full Gemini payload)
  * }
  */
 const saveResult = async (req, res) => {
@@ -63,8 +63,8 @@ const saveResult = async (req, res) => {
   if (!ai_result || typeof ai_result !== 'object' || Array.isArray(ai_result)) {
     errors.push('ai_result must be a non-null JSON object.');
   } else {
-    // Ensure the four Claude fields are present
-    const required = ['readiness_score', 'brutal_gaps', 'fix_it_roadmap', 'one_liner'];
+    // Ensure the Gemini fields are present
+    const required = ['readiness_score', 'summary', 'strengths', 'weaknesses', 'improvement_roadmap'];
     const missing  = required.filter((k) => !(k in ai_result));
     if (missing.length) {
       errors.push(`ai_result is missing required fields: ${missing.join(', ')}.`);

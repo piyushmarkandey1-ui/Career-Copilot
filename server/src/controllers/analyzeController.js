@@ -9,11 +9,11 @@
  *   B) application/json     — { resumeText, targetRole }
  *      (caller already has the extracted text, e.g. from POST /api/upload)
  *
- * Delegates AI analysis to claudeService.
+ * Delegates AI analysis to geminiService.
  */
 
 const { extractTextFromPDF } = require('../services/pdfExtractor');
-const { analyzeWithClaude, validateResumeWithClaude } = require('../services/claudeService');
+const { analyzeWithGemini, validateResumeWithGemini } = require('../services/geminiService');
 const { analyzeLocally, detectResumeLocally } = require('../services/localAnalyzer');
 
 const SUPPORTED_ROLES = [
@@ -90,9 +90,9 @@ const analyzeResume = async (req, res) => {
   // ── Run Resume Detection Check ─────────────────────────────────────────────
   let validation;
   try {
-    validation = await validateResumeWithClaude(resumeText);
+    validation = await validateResumeWithGemini(resumeText);
   } catch (err) {
-    console.error('Claude Resume Validation Error:', err.message);
+    console.error('Gemini Resume Validation Error:', err.message);
     console.log('Falling back to local rule-based resume detection...');
     validation = detectResumeLocally(resumeText);
   }
@@ -105,12 +105,12 @@ const analyzeResume = async (req, res) => {
     });
   }
 
-  // ── Call Claude ────────────────────────────────────────────────────────────
+  // ── Call Gemini ────────────────────────────────────────────────────────────
   let analysis;
   try {
-    analysis = await analyzeWithClaude(resumeText, targetRole);
+    analysis = await analyzeWithGemini(resumeText, targetRole);
   } catch (err) {
-    console.error('Claude API Error:', err.message);
+    console.error('Gemini API Error:', err.message);
     console.log('Falling back to local rule-based analysis...');
     analysis = analyzeLocally(resumeText, targetRole);
   }
@@ -124,7 +124,7 @@ const analyzeResume = async (req, res) => {
 
   // ── Derive sub-scores from analysis text ───────────────────────────────────
   // These are approximations based on what the analyzer detected.
-  // When Claude responds they may be present in full_analysis_json already.
+  // When Gemini responds they may be present in full_analysis_json already.
   const textLower = resumeText.toLowerCase();
 
   const atsScore = Math.min(100, Math.max(0, Math.round(

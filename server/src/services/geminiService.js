@@ -1,40 +1,23 @@
-/**
- * claudeService.js
- *
- * Wraps the Anthropic Claude API.
- * Sends resume text + target role and returns a structured analysis object.
- *
- * Returned shape:
- * {
- *   readiness_score : number (0–100),
- *   brutal_gaps     : string[],
- *   fix_it_roadmap  : { priority: "high"|"medium"|"low", action: string }[],
- *   one_liner       : string
- * }
- */
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-const Anthropic = require('@anthropic-ai/sdk');
-
-// Lazily initialised so the module can be imported without a key (e.g. tests)
-let _client = null;
-const getClient = () => {
-  if (!_client) {
-    const apiKey = process.env.ANTHROPIC_API_KEY;
+let _model = null;
+const getModel = () => {
+  if (!_model) {
+    const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       throw Object.assign(
-        new Error('ANTHROPIC_API_KEY is not set in environment variables.'),
+        new Error('GEMINI_API_KEY is not set in environment variables.'),
         { status: 500 }
       );
     }
-    _client = new Anthropic({ apiKey });
+    const genAI = new GoogleGenerativeAI(apiKey);
+    _model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
   }
-  return _client;
+  return _model;
 };
 
-// ── Prompt ────────────────────────────────────────────────────────────────────
 const buildSystemPrompt = () => `
 You are an experienced recruiter, resume reviewer, and career coach with 10+ years of experience across technology and business roles.
-
 Your task is to perform a professional, objective, balanced, and evidence-based review of the uploaded resume for the selected target role.
 
 STRICT RULES — You MUST follow all of these:
@@ -102,112 +85,82 @@ ${resumeText.slice(0, 14000)}
 Return exactly the JSON structure defined in the system prompt. No markdown fences. No extra keys.
 `.trim();
 
-
-// ── Main export ───────────────────────────────────────────────────────────────
-/**
- * @param {string} resumeText  - Plain text extracted from the PDF
- * @param {string} targetRole  - e.g. "Frontend Developer"
- * @returns {Promise<{readiness_score, strengths, weaknesses, resume_structure_feedback, project_feedback, skills_feedback, target_role_fit, improvement_roadmap, summary}>}
- */
-const analyzeWithClaude = async (resumeText, targetRole) => {
-  if (!resumeText || resumeText.trim().length < 50) {
+const analyzeWithGemini = async (resumeText, targetRole) => {
+  if (!resumeText || resumeText.trim().length < 100) {
     throw Object.assign(
       new Error('Resume text is too short to analyze. Make sure the PDF has selectable text.'),
       { status: 422 }
     );
   }
 
-  const client = getClient();
+  const model = getModel();
+  const prompt = `${buildSystemPrompt()}\n\n${buildUserPrompt(resumeText, targetRole)}`;
 
-  const message = await client.messages.create({
-    model: 'claude-opus-4-5',
-    max_tokens: 4096,
-    system: buildSystemPrompt(),
-    messages: [
-      { role: 'user', content: buildUserPrompt(resumeText, targetRole) },
-    ],
-  });
-
-  // Extract the text block from Claude's response
-  const rawContent = message.content.find((b) => b.type === 'text')?.text ?? '';
-
-  // Parse JSON — strip any accidental markdown fences Claude may add
-  const jsonStr = rawContent
-    .replace(/^```(?:json)?\s*/i, '')
-    .replace(/\s*```$/i, '')
-    .trim();
-
-  let parsed;
   try {
-    parsed = JSON.parse(jsonStr);
-  } catch {
-    throw Object.assign(
-      new Error(`Claude returned non-JSON output: ${rawContent.slice(0, 200)}`),
-      { status: 502 }
-    );
-  }
+    const result = await model.generateContent(prompt);
+    const rawContent = result.response.text().trim();
+    const jsonStr = rawContent.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
 
-  // ── Validate shape ──────────────────────────────────────────────────────────
-  const {
-    readiness_score,
-    strengths,
-    weaknesses,
-    resume_structure_feedback,
-    project_feedback,
-    skills_feedback,
-    target_role_fit,
-    improvement_roadmap,
-    summary,
-    resume_specific_observations,
-    generic_feedback_detected,
-    simple_review,
-  } = parsed;
+    let parsed = JSON.parse(jsonStr);
 
-  if (
-    typeof readiness_score !== 'number' ||
-    !Array.isArray(strengths) ||
-    !Array.isArray(weaknesses) ||
-    typeof resume_structure_feedback !== 'string' ||
-    typeof project_feedback !== 'string' ||
-    typeof skills_feedback !== 'string' ||
-    typeof target_role_fit !== 'string' ||
-    !Array.isArray(improvement_roadmap) ||
-    typeof summary !== 'string'
-  ) {
-    throw Object.assign(
-      new Error('Claude response is missing required fields.'),
-      { status: 502 }
-    );
-  }
+    const {
+      readiness_score,
+      strengths,
+      weaknesses,
+      resume_structure_feedback,
+      project_feedback,
+      skills_feedback,
+      target_role_fit,
+      improvement_roadmap,
+      summary,
+      resume_specific_observations,
+      generic_feedback_detected,
+      simple_review,
+    } = parsed;
 
-  return {
-    readiness_score: Math.min(100, Math.max(0, Math.round(readiness_score))),
-    strengths,
-    weaknesses,
-    resume_structure_feedback,
-    project_feedback,
-    skills_feedback,
-    target_role_fit,
-    improvement_roadmap,
-    summary: summary || 'A customized summary could not be generated.',
-    resume_specific_observations: Array.isArray(resume_specific_observations) ? resume_specific_observations : [],
-    generic_feedback_detected: !!generic_feedback_detected,
-    simple_review: simple_review || {
-      summary: summary || '',
-      strengths: Array.isArray(strengths) ? strengths : [],
-      weaknesses: Array.isArray(weaknesses) ? weaknesses : [],
-      improvement_roadmap: Array.isArray(improvement_roadmap) ? improvement_roadmap : [],
-      section_feedback: []
+    if (
+      typeof readiness_score !== 'number' ||
+      !Array.isArray(strengths) ||
+      !Array.isArray(weaknesses) ||
+      typeof resume_structure_feedback !== 'string' ||
+      typeof project_feedback !== 'string' ||
+      typeof skills_feedback !== 'string' ||
+      typeof target_role_fit !== 'string' ||
+      !Array.isArray(improvement_roadmap) ||
+      typeof summary !== 'string'
+    ) {
+      throw new Error('Gemini response is missing required fields.');
     }
-  };
+
+    return {
+      readiness_score: Math.min(100, Math.max(0, Math.round(readiness_score))),
+      strengths,
+      weaknesses,
+      resume_structure_feedback,
+      project_feedback,
+      skills_feedback,
+      target_role_fit,
+      improvement_roadmap,
+      summary: summary || 'A customized summary could not be generated.',
+      resume_specific_observations: Array.isArray(resume_specific_observations) ? resume_specific_observations : [],
+      generic_feedback_detected: !!generic_feedback_detected,
+      simple_review: simple_review || {
+        summary: summary || '',
+        strengths: Array.isArray(strengths) ? strengths : [],
+        weaknesses: Array.isArray(weaknesses) ? weaknesses : [],
+        improvement_roadmap: Array.isArray(improvement_roadmap) ? improvement_roadmap : [],
+        section_feedback: []
+      }
+    };
+  } catch (err) {
+    throw Object.assign(
+      new Error(`Gemini analysis failed: ${err.message}`),
+      { status: 502 }
+    );
+  }
 };
 
-/**
- * Checks if the text represents a valid resume.
- * @param {string} resumeText
- * @returns {Promise<{is_resume: boolean, confidence: number, missing_sections: string[]}>}
- */
-const validateResumeWithClaude = async (resumeText) => {
+const validateResumeWithGemini = async (resumeText) => {
   if (!resumeText || resumeText.trim().length < 100) {
     return {
       is_resume: false,
@@ -216,7 +169,7 @@ const validateResumeWithClaude = async (resumeText) => {
     };
   }
 
-  const client = getClient();
+  const model = getModel();
   const systemPrompt = `You are an AI assistant designed to detect whether a given document is a resume or CV.
 Analyze the document text and look for standard resume components:
 - Name
@@ -240,33 +193,26 @@ Return your response in this exact JSON format, with no other text, markdown for
   "missing_sections": ["<section name>", ...]
 }`;
 
-  const message = await client.messages.create({
-    model: 'claude-3-5-sonnet-20241022',
-    max_tokens: 1000,
-    system: systemPrompt,
-    messages: [
-      { role: 'user', content: `Verify this document:\n\n${resumeText.slice(0, 8000)}` },
-    ],
-  });
+  const prompt = `${systemPrompt}\n\nVerify this document:\n\n${resumeText.slice(0, 8000)}`;
 
-  const rawContent = message.content.find((b) => b.type === 'text')?.text ?? '';
-  const jsonStr = rawContent.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
-
-  let parsed;
   try {
-    parsed = JSON.parse(jsonStr);
-  } catch {
+    const result = await model.generateContent(prompt);
+    const rawContent = result.response.text().trim();
+    const jsonStr = rawContent.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
+
+    let parsed = JSON.parse(jsonStr);
+
+    return {
+      is_resume: typeof parsed.is_resume === 'boolean' ? parsed.is_resume : (parsed.confidence >= 70),
+      confidence: typeof parsed.confidence === 'number' ? Math.min(100, Math.max(0, parsed.confidence)) : 0,
+      missing_sections: Array.isArray(parsed.missing_sections) ? parsed.missing_sections : []
+    };
+  } catch (err) {
     throw Object.assign(
-      new Error(`Claude returned non-JSON validation output: ${rawContent.slice(0, 200)}`),
+      new Error(`Gemini validation failed: ${err.message}`),
       { status: 502 }
     );
   }
-
-  return {
-    is_resume: typeof parsed.is_resume === 'boolean' ? parsed.is_resume : (parsed.confidence >= 70),
-    confidence: typeof parsed.confidence === 'number' ? Math.min(100, Math.max(0, parsed.confidence)) : 0,
-    missing_sections: Array.isArray(parsed.missing_sections) ? parsed.missing_sections : []
-  };
 };
 
-module.exports = { analyzeWithClaude, validateResumeWithClaude };
+module.exports = { analyzeWithGemini, validateResumeWithGemini };
