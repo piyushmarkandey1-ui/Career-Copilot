@@ -70,109 +70,160 @@ body {
 /* ─── White Glassmorphic Adaptive Theme Overrides ────────────────────────── */
 
 /* Text colors: translate dark-mode optimized colors to high-contrast light colors */
-.text-white, .text-slate-50 {
+body .text-white, body .text-slate-50 {
   color: #0f172a !important; /* slate-900 */
 }
-.text-slate-100, .text-slate-200 {
+body .text-slate-100, body .text-slate-200 {
   color: #1e293b !important; /* slate-800 */
 }
-.text-slate-300 {
+body .text-slate-300 {
   color: #334155 !important; /* slate-700 */
 }
-.text-slate-400 {
+body .text-slate-400 {
   color: #475569 !important; /* slate-600 */
 }
-.text-slate-500 {
+body .text-slate-500 {
   color: #64748b !important; /* slate-500 */
 }
 
 /* Highlight text colors */
-.text-indigo-400, .text-indigo-300 {
+body .text-indigo-400, body .text-indigo-300 {
   color: #4f46e5 !important; /* indigo-600 */
 }
-.text-violet-400 {
+body .text-violet-400 {
   color: #7c3aed !important; /* violet-600 */
 }
-.text-fuchsia-400 {
+body .text-fuchsia-400 {
   color: #c026d3 !important; /* fuchsia-600 */
 }
-.text-emerald-400 {
+body .text-emerald-400 {
   color: #059669 !important; /* emerald-600 */
 }
-.text-amber-400 {
-  color: #d97706 !important; /* amber-600 */
+body .text-amber-400, body .text-amber-300 {
+  color: #b45309 !important; /* amber-700 */
 }
-.text-rose-400 {
+body .text-rose-400 {
   color: #e11d48 !important; /* rose-600 */
 }
-.text-cyan-400 {
+body .text-cyan-400 {
   color: #0891b2 !important; /* cyan-600 */
 }
-.text-orange-400 {
+body .text-orange-400 {
   color: #ea580c !important; /* orange-600 */
 }
-.text-blue-400 {
+body .text-blue-400 {
   color: #2563eb !important; /* blue-600 */
 }
 
 /* Filled backgrounds: make dark/black elements look like clean frosted white glass */
-.bg-slate-950, .bg-slate-900, .bg-slate-800, 
-.bg-slate-950\/50, .bg-slate-900\/50, .bg-slate-800\/50,
-.bg-white\/5, .bg-white\/10, .bg-black\/20 {
+body .bg-slate-950, body .bg-slate-900, body .bg-slate-800, 
+body .bg-slate-950\/50, body .bg-slate-900\/50, body .bg-slate-800\/50,
+body .bg-white\/5, body .bg-white\/10, body .bg-black\/20 {
   background-color: rgba(255, 255, 255, 0.45) !important;
   backdrop-filter: blur(24px) !important;
   -webkit-backdrop-filter: blur(24px) !important;
 }
 
 /* Nested white-background card items */
-.bg-white\/5 {
-  background-color: rgba(255, 255, 255, 0.3) !important;
+body .bg-white\/5 {
+  background-color: rgba(255, 255, 255, 0.35) !important;
 }
-.bg-white\/10 {
-  background-color: rgba(255, 255, 255, 0.5) !important;
+body .bg-white\/10 {
+  background-color: rgba(255, 255, 255, 0.55) !important;
 }
-.bg-white\/20 {
-  background-color: rgba(255, 255, 255, 0.7) !important;
+body .bg-white\/20 {
+  background-color: rgba(255, 255, 255, 0.75) !important;
 }
 
-/* Badge colors */
-.bg-indigo-500\/10, .bg-indigo-500\/20 {
+/* Badge and indicator colors */
+body .bg-indigo-500\/10, body .bg-indigo-500\/20 {
   background-color: rgba(99, 102, 241, 0.08) !important;
-  border-color: rgba(99, 102, 241, 0.15) !important;
+  border-color: rgba(99, 102, 241, 0.18) !important;
 }
-.bg-fuchsia-500\/20 {
+body .bg-fuchsia-500\/20 {
   background-color: rgba(240, 70, 250, 0.08) !important;
-  border-color: rgba(240, 70, 250, 0.15) !important;
+  border-color: rgba(240, 70, 250, 0.18) !important;
 }
-.bg-emerald-500\/20 {
+body .bg-emerald-500\/20, body .bg-emerald-500\/15 {
   background-color: rgba(16, 185, 129, 0.08) !important;
-  border-color: rgba(16, 185, 129, 0.15) !important;
+  border-color: rgba(16, 185, 129, 0.18) !important;
+}
+body .bg-red-500\/20, body .bg-red-500\/15, body .bg-red-500\/10 {
+  background-color: rgba(239, 68, 68, 0.08) !important;
+  border-color: rgba(239, 68, 68, 0.18) !important;
+}
+body .bg-amber-500\/10, body .bg-amber-500\/5 {
+  background-color: rgba(245, 158, 11, 0.08) !important;
+  border-color: rgba(245, 158, 11, 0.18) !important;
+}
+body .bg-slate-500\/15 {
+  background-color: rgba(100, 116, 139, 0.08) !important;
+  border-color: rgba(100, 116, 139, 0.18) !important;
+}
+body .bg-violet-500\/5, body .bg-violet-500\/20 {
+  background-color: rgba(139, 92, 246, 0.08) !important;
+  border-color: rgba(139, 92, 246, 0.18) !important;
 }
 
 /* Borders */
-.border-slate-800, .border-slate-700, .border-slate-600,
-.border-white\/10, .border-white\/5 {
+body .border-slate-800, body .border-slate-700, body .border-slate-600,
+body .border-white\/10, body .border-white\/5 {
   border-color: rgba(255, 255, 255, 0.65) !important;
 }
-.border-white\/20 {
-  border-color: rgba(255, 255, 255, 0.8) !important;
+body .border-white\/20 {
+  border-color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* Icon box borders and backgrounds */
+body .border-indigo-500\/30, body .border-indigo-500\/20 {
+  border-color: rgba(99, 102, 241, 0.25) !important;
+}
+body .border-fuchsia-500\/30, body .border-fuchsia-500\/20 {
+  border-color: rgba(240, 70, 250, 0.25) !important;
+}
+body .border-emerald-500\/30, body .border-emerald-500\/20 {
+  border-color: rgba(16, 185, 129, 0.25) !important;
 }
 
 /* Form inputs & dropdowns styling */
-input, select, textarea {
-  background-color: rgba(255, 255, 255, 0.6) !important;
-  border: 1px solid rgba(15, 23, 42, 0.1) !important;
+body input, body select, body textarea {
+  background-color: rgba(255, 255, 255, 0.65) !important;
+  border: 1px solid rgba(15, 23, 42, 0.08) !important;
   color: #0f172a !important;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.02) !important;
 }
-input::placeholder, textarea::placeholder {
+body input::placeholder, body textarea::placeholder {
   color: #94a3b8 !important;
 }
-input:focus, select:focus, textarea:focus {
-  border-color: #6366f1 !important;
+body input:focus, body select:focus, body textarea:focus {
   background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1) !important;
 }
 option {
   background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* Dashed Dropzone styling */
+body .border-dashed {
+  border-color: rgba(99, 102, 241, 0.3) !important;
+  border-width: 2px !important;
+  background-color: rgba(255, 255, 255, 0.4) !important;
+}
+body .border-dashed:hover {
+  border-color: #6366f1 !important;
+  background-color: rgba(99, 102, 241, 0.04) !important;
+}
+
+/* Hover overrides for buttons and toggles */
+body .hover\:bg-white\/10:hover {
+  background-color: rgba(255, 255, 255, 0.65) !important;
+}
+body .hover\:bg-white\/5:hover {
+  background-color: rgba(255, 255, 255, 0.5) !important;
+}
+body .hover\:text-white:hover {
   color: #0f172a !important;
 }
 
@@ -186,6 +237,26 @@ nav.glass-strong {
   background-image: linear-gradient(to right, #f43f5e, #c026d3, #4f46e5) !important;
 }
 
+/* Custom Gradients mapping */
+body .from-indigo-400 {
+  --tw-gradient-from: #4f46e5 !important;
+  --tw-gradient-to: rgba(79, 70, 229, 0) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+body .to-purple-400 {
+  --tw-gradient-to: #7c3aed !important;
+}
+body .from-violet-400 {
+  --tw-gradient-from: #7c3aed !important;
+}
+body .via-fuchsia-400 {
+  --tw-gradient-to: rgba(192, 38, 211, 0) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), #c026d3 !important;
+}
+body .to-indigo-400 {
+  --tw-gradient-to: #4f46e5 !important;
+}
+
 /* Background gradient blobs mix-blend conversion for light mode */
 .mix-blend-screen {
   mix-blend-mode: multiply !important;
@@ -193,19 +264,15 @@ nav.glass-strong {
 }
 
 /* ─── Preserve White Text for Filled/Vibrant UI Elements ────────────────── */
-.bg-indigo-600, .bg-violet-600, .bg-emerald-600, .bg-fuchsia-600,
-.bg-indigo-500, .bg-violet-500, .bg-emerald-500, .bg-rose-600,
-.bg-indigo-600 *, .bg-violet-600 *, .bg-emerald-600 *, .bg-fuchsia-600 *,
-.bg-indigo-500 *, .bg-violet-500 *, .bg-emerald-500 *, .bg-rose-600 *,
-button.bg-white, button.bg-white * {
-  /* Buttons and active controls must keep their text color */
-}
-
-/* Explicit text color overrides on filled background elements */
-.bg-violet-600, .bg-emerald-600, .bg-indigo-600, .bg-indigo-500 {
+body .bg-indigo-600, body .bg-violet-600, body .bg-emerald-600, body .bg-fuchsia-600,
+body .bg-indigo-500, body .bg-violet-500, body .bg-emerald-500, body .bg-rose-600, body .bg-red-600,
+body .bg-gradient-to-r, body .bg-gradient-to-br, body .btn-primary {
   color: #ffffff !important;
 }
-.bg-violet-600 .text-white, .bg-emerald-600 .text-white, .bg-indigo-600 .text-white {
+
+body .bg-indigo-600 *, body .bg-violet-600 *, body .bg-emerald-600 *, body .bg-fuchsia-600 *,
+body .bg-indigo-500 *, body .bg-violet-500 *, body .bg-emerald-500 *, body .bg-rose-600 *, body .bg-red-600 *,
+body .bg-gradient-to-r *, body .bg-gradient-to-br *, body .btn-primary * {
   color: #ffffff !important;
 }
 
