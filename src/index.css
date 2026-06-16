@@ -121,13 +121,13 @@ body {
 .light-mode .text-fuchsia-400 {
   color: #c026d3 !important; /* fuchsia-600 */
 }
-.light-mode .text-emerald-400 {
+.light-mode .text-emerald-500, .light-mode .text-emerald-400 {
   color: #059669 !important; /* emerald-600 */
 }
-.light-mode .text-amber-400, .light-mode .text-amber-300 {
+.light-mode .text-amber-500, .light-mode .text-amber-400, .light-mode .text-amber-300, .light-mode .text-amber-200 {
   color: #b45309 !important; /* amber-700 */
 }
-.light-mode .text-rose-400 {
+.light-mode .text-rose-500, .light-mode .text-rose-400, .light-mode .text-red-500, .light-mode .text-red-400 {
   color: #e11d48 !important; /* rose-600 */
 }
 .light-mode .text-cyan-400 {
