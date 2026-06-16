@@ -300,14 +300,22 @@ nav.glass-strong {
 /* ─── Preserve White Text for Filled/Vibrant UI Elements ────────────────── */
 .light-mode .bg-indigo-600, .light-mode .bg-violet-600, .light-mode .bg-emerald-600, .light-mode .bg-fuchsia-600,
 .light-mode .bg-indigo-500, .light-mode .bg-violet-500, .light-mode .bg-emerald-500, .light-mode .bg-rose-600, .light-mode .bg-red-600,
-.light-mode .bg-gradient-to-r, .light-mode .bg-gradient-to-br, .light-mode .btn-primary {
+.light-mode .bg-gradient-to-r:not(.text-transparent), .light-mode .bg-gradient-to-br:not(.text-transparent), .light-mode .btn-primary {
   color: #ffffff !important;
 }
 
 .light-mode .bg-indigo-600 *, .light-mode .bg-violet-600 *, .light-mode .bg-emerald-600 *, .light-mode .bg-fuchsia-600 *,
 .light-mode .bg-indigo-500 *, .light-mode .bg-violet-500 *, .light-mode .bg-emerald-500 *, .light-mode .bg-rose-600 *, .light-mode .bg-red-600 *,
-.light-mode .bg-gradient-to-r *, .light-mode .bg-gradient-to-br *, .light-mode .btn-primary * {
+.light-mode .bg-gradient-to-r:not(.text-transparent) *, .light-mode .bg-gradient-to-br:not(.text-transparent) *, .light-mode .btn-primary * {
   color: #ffffff !important;
+}
+
+/* ─── Mobile Menu Solid Background ──────────────────────────────────────── */
+.mobile-menu-bg {
+  background-color: #0f172a !important; /* solid slate-900 */
+}
+.light-mode .mobile-menu-bg {
+  background-color: #ffffff !important; /* solid white */
 }
 
 /* ─── SVG Charts Adjustments ────────────────────────────────────────────── */

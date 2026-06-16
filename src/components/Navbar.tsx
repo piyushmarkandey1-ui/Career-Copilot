@@ -23,7 +23,7 @@ export default function Navbar({ theme, toggleTheme }: { theme: 'light-mode' | '
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled ? 'glass-strong shadow-lg shadow-black/20' : 'bg-transparent'
+        mobileOpen ? 'mobile-menu-bg shadow-lg shadow-black/20' : scrolled ? 'glass-strong shadow-lg shadow-black/20' : 'bg-transparent'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
@@ -94,7 +94,7 @@ export default function Navbar({ theme, toggleTheme }: { theme: 'light-mode' | '
 
       {/* Mobile Nav */}
       {mobileOpen && (
-        <div className="md:hidden glass-strong border-t border-white/10 px-4 py-3 space-y-1">
+        <div className="md:hidden mobile-menu-bg border-t border-slate-200 dark:border-slate-800 px-4 py-3 space-y-1 shadow-2xl pb-6">
           {navLinks.map((link) => (
             <Link
               key={link.path}
