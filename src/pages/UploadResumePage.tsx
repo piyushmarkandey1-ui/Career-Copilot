@@ -1,6 +1,6 @@
 import { useState, useRef, DragEvent, ChangeEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { UploadCloud, FileText, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
+import { UploadCloud, FileText, CheckCircle2, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { BASE_URL } from '../config/api'
 
@@ -25,7 +25,6 @@ export default function UploadResumePage() {
   const [targetRole, setTargetRole] = useState('')
   const [email, setEmail] = useState('')
   const [progress, setProgress] = useState(0)
-  const [errorMessage, setErrorMessage] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
 
