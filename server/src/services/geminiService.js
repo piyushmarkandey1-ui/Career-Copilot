@@ -17,144 +17,113 @@ const getModel = () => {
 };
 
 const buildSystemPrompt = () => `
-You are an experienced recruiter, resume reviewer, and career coach with 10+ years of experience across technology and business roles.
-Your task is to perform a professional, objective, balanced, and evidence-based review of the uploaded resume for the selected target role.
+You are an experienced technical recruiter, resume reviewer, and career coach.
+Your task is to perform a highly personalized, evidence-based review of the uploaded resume against the selected target role.
 
-STRICT RULES — You MUST follow all of these:
-1. Every single observation must reference SPECIFIC content from the resume — a project name, a company name, a skill listed, an education detail, a specific bullet point, or a missing section.
-2. Do NOT use generic filler phrases such as "Add more projects", "Improve your skills", "Gain more experience", or "Make it ATS friendly". Replace every such phrase with a specific, evidence-based improvement.
-3. Do NOT reuse the same sentence patterns across different sections.
-4. Do NOT give the same strengths or weaknesses unless the resume content actually repeats.
-5. Before writing each point, ask: "Does this reference something SPECIFIC in this resume?"
-6. If a weakness is common (e.g., missing metrics), explain it using the user's ACTUAL bullet points or project names from the resume.
-7. Be honest but respectful. Do not exaggerate. Do not insult. Do not discourage.
-8. Vary the sentence structure and wording of each point.
+STRICT RULES:
+1. BUILD AN INTERNAL PROFILE FIRST: Before writing feedback, internally map the candidate's education, experience level, exact skills, projects, and achievements.
+2. EVIDENCE ONLY: Every observation, strength, weakness, and recommendation MUST reference specific content from the resume (e.g., project names, company names, specific metrics, listed skills). 
+3. NO ASSUMPTIONS: Do not invent missing information. If evidence is missing, state: "Unable to evaluate this area because the resume does not provide enough information."
+4. NO TEMPLATES: Do not use generic phrases like "Add more projects", "Improve skills", "Gain experience". Explain the exact technical reason behind every recommendation.
+5. EXPLAIN SCORES: Justify the Readiness Score and Section Scores using evidence from the text.
+6. COMPARE EXPECTATIONS: Evaluate the candidate's specific skills against the typical industry expectations for the target role.
+7. VARY SENTENCE STRUCTURE: Ensure the writing style feels human, dynamic, and unique to this specific candidate.
 
-Return your response in this exact JSON format and no other format:
+Return exactly this JSON format:
 {
-  "readiness_score": <integer 0-100>,
-  "summary": "<2–3 sentence personalized assessment referencing specific resume content>",
-  "strengths": ["<evidence-based strength 1>", "<evidence-based strength 2>", "<evidence-based strength 3>"],
-  "weaknesses": ["<evidence-based weakness 1>", "<evidence-based weakness 2>", "<evidence-based weakness 3>"],
-  "resume_structure_feedback": "<specific structural observations about this resume>",
-  "project_feedback": "<specific feedback on the actual projects listed, by name>",
-  "skills_feedback": "<specific feedback referencing the exact skills present and absent>",
-  "target_role_fit": "<personalized assessment of fit for the selected role>",
-  "improvement_roadmap": ["<specific action 1>", "<specific action 2>", "<specific action 3>", "<specific action 4>"],
-  "resume_specific_observations": [
-    "<observation that only applies to THIS resume based on its actual content>",
-    "<observation that only applies to THIS resume based on its actual content>",
-    "<observation that only applies to THIS resume based on its actual content>"
+  "readiness_score": <int 0-100>,
+  "score_explanation": "<string explaining score with evidence>",
+  "executive_summary": "<unique personalized executive summary>",
+  "candidate_profile_internal": {
+    "education_level": "<string>",
+    "experience_level": "<string>",
+    "top_skills": ["<string>"],
+    "target_role": "<string>",
+    "notable_achievements": ["<string>"]
+  },
+  "section_scores": {
+    "layout": <int 0-100>,
+    "contact_info": <int 0-100>,
+    "education": <int 0-100>,
+    "skills": <int 0-100>,
+    "projects": <int 0-100>,
+    "experience": <int 0-100>,
+    "ats_compatibility": <int 0-100>,
+    "target_role_alignment": <int 0-100>
+  },
+  "strengths": [
+    { "point": "<unique strength based on actual content>", "confidence": "High|Medium|Low" }
   ],
-  "generic_feedback_detected": false,
-  "simple_review": {
-    "summary": "<simplified student-friendly 2-3 sentence summary>",
-    "strengths": ["<simplified strength 1>", "<simplified strength 2>", "<simplified strength 3>"],
-    "weaknesses": ["<simplified weakness 1>", "<simplified weakness 2>", "<simplified weakness 3>"],
-    "improvement_roadmap": ["<simplified roadmap 1>", "<simplified roadmap 2>", "<simplified roadmap 3>"],
-    "section_feedback": [
-      { "section": "Structure", "feedback": "<simplified structure feedback>" },
-      { "section": "Projects", "feedback": "<simplified project feedback>" },
-      { "section": "Skills", "feedback": "<simplified skills feedback>" },
-      { "section": "Role Fit", "feedback": "<simplified role fit>" }
-    ]
+  "weaknesses": [
+    { "point": "<unique weakness based on actual content>", "confidence": "High|Medium|Low" }
+  ],
+  "recommendations": {
+    "high_impact": ["<actionable item with reason>"],
+    "medium_impact": ["<actionable item>"],
+    "low_impact": ["<actionable item>"]
+  },
+  "resume_specific_observations": [
+    "<observation unique to this resume>"
+  ],
+  "recruiter_summary": {
+    "standout_factor": "<string>",
+    "biggest_improvement_area": "<string>",
+    "interview_readiness": "<string>",
+    "overall_assessment": "<string>"
+  },
+  "target_role_comparison": {
+    "role_expectations": "<string>",
+    "candidate_alignment": "<string>"
   }
 }
 `.trim();
 
 const buildUserPrompt = (resumeText, targetRole) => `
-Analyze this resume for the role of "${targetRole}".
+Analyze this resume for the target role of "${targetRole}".
+Ensure every single piece of feedback references a specific word, project, company, or metric from the text below.
+If a section is entirely missing, deduct points heavily in that section_score and mention it explicitly.
 
-Before writing the review, internally identify:
-- What is unique about this resume?
-- Which specific sections are strong, and why?
-- Which specific sections are weak, with evidence from the text?
-- What is completely missing?
-- What should be removed or shortened?
-- What should be added for this exact target role?
-
-IMPORTANT: You must also generate a "simple_review". This must be based on the EXACT SAME detailed review you just created, but translated into simple, jargon-free language that a college student or fresher can easily understand. Preserve all meaning, just remove the complexity.
-
-Use the candidate's ACTUAL project names, company names, skill mentions, education details, and bullet points in your feedback — not generic placeholders.
-
-RESUME:
+RESUME TEXT:
 """
 ${resumeText.slice(0, 14000)}
 """
 
-Return exactly the JSON structure defined in the system prompt. No markdown fences. No extra keys.
+Output pure JSON exactly as defined.
 `.trim();
 
 const analyzeWithGemini = async (resumeText, targetRole) => {
-  if (!resumeText || resumeText.trim().length < 100) {
+  if (!resumeText || resumeText.split(/\\s+/).filter(Boolean).length < 150) {
     throw Object.assign(
-      new Error('Resume text is too short to analyze. Make sure the PDF has selectable text.'),
+      new Error('Resume text is too short to analyze.'),
       { status: 422 }
     );
   }
 
   const model = getModel();
-  const prompt = `${buildSystemPrompt()}\n\n${buildUserPrompt(resumeText, targetRole)}`;
+  const prompt = \`\${buildSystemPrompt()}\\n\\n\${buildUserPrompt(resumeText, targetRole)}\`;
 
   try {
     const result = await model.generateContent(prompt);
     const rawContent = result.response.text().trim();
-    const jsonStr = rawContent.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
+    const jsonStr = rawContent.replace(/^\\s*\\x60\\x60\\x60(?:json)?\\s*/i, '').replace(/\\s*\\x60\\x60\\x60\\s*$/i, '').trim();
 
     let parsed = JSON.parse(jsonStr);
 
-    const {
-      readiness_score,
-      strengths,
-      weaknesses,
-      resume_structure_feedback,
-      project_feedback,
-      skills_feedback,
-      target_role_fit,
-      improvement_roadmap,
-      summary,
-      resume_specific_observations,
-      generic_feedback_detected,
-      simple_review,
-    } = parsed;
-
     if (
-      typeof readiness_score !== 'number' ||
-      !Array.isArray(strengths) ||
-      !Array.isArray(weaknesses) ||
-      typeof resume_structure_feedback !== 'string' ||
-      typeof project_feedback !== 'string' ||
-      typeof skills_feedback !== 'string' ||
-      typeof target_role_fit !== 'string' ||
-      !Array.isArray(improvement_roadmap) ||
-      typeof summary !== 'string'
+      typeof parsed.readiness_score !== 'number' ||
+      !Array.isArray(parsed.strengths) ||
+      !Array.isArray(parsed.weaknesses) ||
+      !parsed.section_scores ||
+      !parsed.recommendations ||
+      !parsed.recruiter_summary
     ) {
       throw new Error('Gemini response is missing required fields.');
     }
 
-    return {
-      readiness_score: Math.min(100, Math.max(0, Math.round(readiness_score))),
-      strengths,
-      weaknesses,
-      resume_structure_feedback,
-      project_feedback,
-      skills_feedback,
-      target_role_fit,
-      improvement_roadmap,
-      summary: summary || 'A customized summary could not be generated.',
-      resume_specific_observations: Array.isArray(resume_specific_observations) ? resume_specific_observations : [],
-      generic_feedback_detected: !!generic_feedback_detected,
-      simple_review: simple_review || {
-        summary: summary || '',
-        strengths: Array.isArray(strengths) ? strengths : [],
-        weaknesses: Array.isArray(weaknesses) ? weaknesses : [],
-        improvement_roadmap: Array.isArray(improvement_roadmap) ? improvement_roadmap : [],
-        section_feedback: []
-      }
-    };
+    return parsed;
   } catch (err) {
     throw Object.assign(
-      new Error(`Gemini analysis failed: ${err.message}`),
+      new Error(\`Gemini analysis failed: \${err.message}\`),
       { status: 502 }
     );
   }

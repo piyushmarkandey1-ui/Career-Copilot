@@ -123,39 +123,12 @@ const analyzeResume = async (req, res) => {
     ...analysis,
   };
 
-  // ── Derive sub-scores from analysis text ───────────────────────────────────
-  // These are approximations based on what the analyzer detected.
-  // When Gemini responds they may be present in full_analysis_json already.
-  const textLower = resumeText.toLowerCase();
-
-  const atsScore = Math.min(100, Math.max(0, Math.round(
-    (analysis.readiness_score || 50) +
-    (/github|linkedin/.test(textLower) ? 5 : -5) +
-    (/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/.test(textLower) ? 2 : -2) +
-    (Math.random() * 4 - 2) // small variance per upload
-  )));
-
-  const skillsScore = Math.min(100, Math.max(0, Math.round(
-    analysis.skills_feedback && analysis.skills_feedback.includes('strong')
-      ? (analysis.readiness_score || 50) + 8
-      : (analysis.readiness_score || 50) - 5
-  )));
-
-  const projectScore = Math.min(100, Math.max(0, Math.round(
-    /github\.com\//i.test(resumeText)
-      ? (analysis.readiness_score || 50) + 6
-      : /project/i.test(resumeText)
-        ? (analysis.readiness_score || 50) - 3
-        : (analysis.readiness_score || 50) - 12
-  )));
-
-  const layoutScore = Math.min(100, Math.max(0, Math.round(
-    (() => {
-      const bulletCount = (resumeText.match(/^[-•*▪➤]/gm) || []).length;
-      const sectionCount = ['experience','education','skills','projects','summary','certifications'].filter(s => textLower.includes(s)).length;
-      return 40 + (sectionCount * 6) + Math.min(20, bulletCount * 2);
-    })()
-  )));
+  // ── Derive sub-scores from analysis ────────────────────────────────────────
+  // We now use the exact section scores provided by the AI instead of heuristics.
+  const atsScore = analysis.section_scores?.ats_compatibility ?? 0;
+  const skillsScore = analysis.section_scores?.skills ?? 0;
+  const projectScore = analysis.section_scores?.projects ?? 0;
+  const layoutScore = analysis.section_scores?.layout ?? 0;
 
   // ── Save to history if email provided (non-blocking) ────────────────────────
   const email = (req.body?.email || '').trim();
@@ -164,6 +137,26 @@ const analyzeResume = async (req, res) => {
       try {
         const { saveHistory } = require('./historyController');
         let savedOk = false;
+
+        // Map rich objects back to simple strings so GrowthTracker charts don't break
+        const mappedStrengths = Array.isArray(analysis.strengths) 
+          ? analysis.strengths.map(s => s.point || s) 
+          : [];
+        const mappedWeaknesses = Array.isArray(analysis.weaknesses) 
+          ? analysis.weaknesses.map(w => w.point || w) 
+          : [];
+        
+        let mappedRoadmap = [];
+        if (analysis.recommendations) {
+          mappedRoadmap = [
+            ...(analysis.recommendations.high_impact || []),
+            ...(analysis.recommendations.medium_impact || []),
+            ...(analysis.recommendations.low_impact || [])
+          ];
+        } else if (Array.isArray(analysis.improvement_roadmap)) {
+          mappedRoadmap = analysis.improvement_roadmap;
+        }
+
         const histReq = {
           body: {
             email,
@@ -173,9 +166,9 @@ const analyzeResume = async (req, res) => {
             skills_score: skillsScore,
             project_score: projectScore,
             layout_score: layoutScore,
-            strengths: Array.isArray(analysis.strengths) ? analysis.strengths : [],
-            weaknesses: Array.isArray(analysis.weaknesses) ? analysis.weaknesses : [],
-            improvement_roadmap: Array.isArray(analysis.improvement_roadmap) ? analysis.improvement_roadmap : [],
+            strengths: mappedStrengths,
+            weaknesses: mappedWeaknesses,
+            improvement_roadmap: mappedRoadmap,
             full_analysis_json: analysis,
           },
         };

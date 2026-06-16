@@ -1,30 +1,57 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import {
+  Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer
+} from 'recharts'
 
 interface AnalysisData {
   readiness_score: number
-  strengths: string[]
-  weaknesses: string[]
-  resume_structure_feedback: string
-  project_feedback: string
-  skills_feedback: string
-  target_role_fit: string
-  improvement_roadmap: string[]
-  summary: string
+  score_explanation?: string
+  executive_summary?: string
+  candidate_profile_internal?: {
+    education_level: string
+    experience_level: string
+    top_skills: string[]
+    target_role: string
+    notable_achievements: string[]
+  }
+  section_scores?: {
+    layout: number
+    contact_info: number
+    education: number
+    skills: number
+    projects: number
+    experience: number
+    ats_compatibility: number
+    target_role_alignment: number
+  }
+  strengths: { point: string; confidence: string }[] | string[]
+  weaknesses: { point: string; confidence: string }[] | string[]
+  recommendations?: {
+    high_impact: string[]
+    medium_impact: string[]
+    low_impact: string[]
+  }
   resume_specific_observations?: string[]
-  generic_feedback_detected?: boolean
-  simple_review?: {
-    summary: string
-    strengths: string[]
-    weaknesses: string[]
-    improvement_roadmap: string[]
-    section_feedback: { section: string; feedback: string }[]
+  recruiter_summary?: {
+    standout_factor: string
+    biggest_improvement_area: string
+    interview_readiness: string
+    overall_assessment: string
+  }
+  target_role_comparison?: {
+    role_expectations: string
+    candidate_alignment: string
   }
   validation?: {
     is_resume: boolean
     confidence: number
-    missing_sections: string[]
+    missing_sections?: string[]
   }
+  // Fallbacks for older data
+  summary?: string
+  improvement_roadmap?: string[]
+  simple_review?: any
 }
 
 interface LocationState {
@@ -39,38 +66,18 @@ function ScoreRing({ score }: { score: number }) {
   const circumference = 2 * Math.PI * radius
   const offset = circumference - (score / 100) * circumference
 
-  // Color based on score
   const getColor = () => {
     if (score >= 80) return { from: '#10b981', to: '#059669' } // green
     if (score >= 60) return { from: '#f59e0b', to: '#d97706' } // amber
     return { from: '#ef4444', to: '#dc2626' } // red
   }
-
   const color = getColor()
 
   return (
     <div className="relative flex h-48 w-48 items-center justify-center">
       <svg className="absolute -rotate-90" width="192" height="192">
-        <circle
-          cx="96"
-          cy="96"
-          r={radius}
-          strokeWidth="12"
-          stroke="rgba(255,255,255,0.1)"
-          fill="none"
-        />
-        <circle
-          cx="96"
-          cy="96"
-          r={radius}
-          strokeWidth="12"
-          stroke={`url(#scoreGrad${score})`}
-          fill="none"
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          style={{ transition: 'stroke-dashoffset 1.5s ease' }}
-        />
+        <circle cx="96" cy="96" r={radius} strokeWidth="12" stroke="rgba(255,255,255,0.1)" fill="none" />
+        <circle cx="96" cy="96" r={radius} strokeWidth="12" stroke={`url(#scoreGrad${score})`} fill="none" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={offset} style={{ transition: 'stroke-dashoffset 1.5s ease' }} />
         <defs>
           <linearGradient id={`scoreGrad${score}`} x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={color.from} />
@@ -86,84 +93,89 @@ function ScoreRing({ score }: { score: number }) {
   )
 }
 
+function ConfidenceBadge({ level }: { level: string }) {
+  if (level === 'High') return <span className="shrink-0 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-400 uppercase tracking-widest border border-emerald-500/30">High Confidence</span>
+  if (level === 'Medium') return <span className="shrink-0 rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-400 uppercase tracking-widest border border-amber-500/30">Medium Confidence</span>
+  return <span className="shrink-0 rounded-full bg-slate-500/20 px-2 py-0.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest border border-slate-500/30">Low Confidence</span>
+}
+
 export default function ResultsDashboard() {
   const location = useLocation()
   const state = location.state as LocationState
 
-  // Mock data for when no state is passed (sample view)
   const mockData: AnalysisData = {
-    readiness_score: 75,
-    validation: {
-      is_resume: true,
-      confidence: 95,
-      missing_sections: ["Certifications section"]
-    },
-    summary: "Strong foundation with good project experience, but needs better metrics and tailored skills formatting to stand out for senior roles.",
+    readiness_score: 72,
+    score_explanation: "This score is driven by a solid foundation in core skills, but penalized for missing metrics in the experience section and an absence of deployed project links.",
+    executive_summary: "Strong candidate with good foundational skills, but the resume reads like a list of responsibilities rather than a track record of achievements.",
+    section_scores: { layout: 85, contact_info: 100, education: 90, skills: 75, projects: 60, experience: 50, ats_compatibility: 80, target_role_alignment: 72 },
     strengths: [
-      "Demonstrates solid experience with modern frontend frameworks.",
-      "Projects show full-stack capability and deployment experience.",
-      "Clear progression in responsibilities over time."
+      { point: "Education section is clear and highlights a relevant degree from a well-known university.", confidence: "High" },
+      { point: "Core tech stack (React, Node) aligns perfectly with the target role.", confidence: "High" }
     ],
     weaknesses: [
-      "Lacks quantifiable achievements and metrics.",
-      "System design and architecture skills are underrepresented.",
-      "Some older technologies are taking up valuable space."
+      { point: "Experience bullets at 'TechCorp' lack quantifiable metrics (e.g. 'Improved performance' instead of 'Improved performance by X%').", confidence: "High" },
+      { point: "Projects are listed but lack GitHub links, making it impossible for technical reviewers to verify code quality.", confidence: "Medium" }
     ],
-    resume_structure_feedback: "The structure is generally clean, but the skills section could be categorized better. Use bullet points more effectively to highlight impact rather than just listing tasks.",
-    project_feedback: "Your projects are good, but they need live links and GitHub repository links. Focus on explaining the 'why' behind technical decisions rather than just what you built.",
-    skills_feedback: "You have a great foundation in React and Node.js. Consider removing older skills like jQuery and adding more emphasis on Next.js, TypeScript, and testing frameworks.",
-    target_role_fit: "You are well-suited for mid-level frontend roles. To hit senior level, you need to show more architectural ownership and mentorship.",
-    improvement_roadmap: [
-      "Rewrite bullet points to include specific metrics (e.g., 'Reduced load time by 30%').",
-      "Add links to live deployments and GitHub repos for all listed projects.",
-      "Create a dedicated 'System Architecture' bullet for your most recent role.",
-      "Categorize the skills section into 'Languages', 'Frameworks', 'Tools', etc."
-    ],
-    simple_review: {
-      summary: "You have a good start, but you need to show proof of your skills and organize things better.",
-      strengths: [
-        "You know modern tools.",
-        "Your projects prove you can build real things.",
-        "Your career shows growth."
-      ],
-      weaknesses: [
-        "You don't mention results or numbers.",
-        "You're missing advanced skills.",
-        "Some old skills shouldn't be here."
-      ],
-      improvement_roadmap: [
-        "Add numbers to your bullet points.",
-        "Link your projects.",
-        "Talk about how you designed systems.",
-        "Group your skills neatly."
-      ],
-      section_feedback: [
-        { section: "Structure", feedback: "It's neat, but grouping your skills will make it easier to read." },
-        { section: "Projects", feedback: "Good projects! Just add links so people can actually see them." },
-        { section: "Skills", feedback: "Remove old stuff like jQuery and focus on what you're best at." },
-        { section: "Role Fit", feedback: "You're ready for mid-level jobs, but not senior ones yet." }
-      ]
+    recommendations: {
+      high_impact: ["Rewrite the 3 experience bullets under 'TechCorp' using the STAR method, ensuring each ends with a measurable business outcome."],
+      medium_impact: ["Add direct GitHub links to the 2 listed projects."],
+      low_impact: ["Move the Skills section to the top to immediately satisfy ATS checks."]
+    },
+    recruiter_summary: {
+      standout_factor: "Clean layout and solid educational pedigree.",
+      biggest_improvement_area: "Quantifying impact in the experience section.",
+      interview_readiness: "Not quite ready. Needs polish to pass a senior screening.",
+      overall_assessment: "A capable developer whose resume currently undersells their actual impact."
+    },
+    target_role_comparison: {
+      role_expectations: "Expects strong evidence of full-stack deployment, system design, and measurable impact on business KPIs.",
+      candidate_alignment: "Meets technical requirements, but lacks evidence of deployment and measurable impact."
     }
   }
 
   const analysis = state?.analysis || mockData
   const filename = state?.filename || 'sample-resume.pdf'
-  const targetRole = state?.targetRole || 'Frontend Developer'
+  const targetRole = state?.targetRole || 'Software Engineer'
   const email = state?.email || null
 
   const [viewMode, setViewMode] = useState<'detailed' | 'simplified'>('detailed')
   const isSimple = viewMode === 'simplified' && analysis.simple_review
-  const displaySummary = isSimple ? analysis.simple_review!.summary : analysis.summary
-  const displayStrengths = isSimple ? analysis.simple_review!.strengths : analysis.strengths
-  const displayWeaknesses = isSimple ? analysis.simple_review!.weaknesses : analysis.weaknesses
-  const displayRoadmap = isSimple ? analysis.simple_review!.improvement_roadmap : analysis.improvement_roadmap
+  const displaySummary = isSimple ? analysis.simple_review!.summary : (analysis.executive_summary || analysis.summary)
 
-  const scoreColor =
-    analysis.readiness_score >= 80
-      ? 'text-emerald-400'
-      : analysis.readiness_score >= 60
-      ? 'text-amber-400'
-      : 'text-red-400'
+  const scoreColor = analysis.readiness_score >= 80 ? 'text-emerald-400' : analysis.readiness_score >= 60 ? 'text-amber-400' : 'text-red-400'
+
+  // Prepare radar chart data
+  const radarData = useMemo(() => {
+    if (!analysis.section_scores) return []
+    return [
+      { subject: 'Layout', A: analysis.section_scores.layout },
+      { subject: 'Contact Info', A: analysis.section_scores.contact_info },
+      { subject: 'Education', A: analysis.section_scores.education },
+      { subject: 'Skills', A: analysis.section_scores.skills },
+      { subject: 'Projects', A: analysis.section_scores.projects },
+      { subject: 'Experience', A: analysis.section_scores.experience },
+      { subject: 'ATS Fit', A: analysis.section_scores.ats_compatibility },
+      { subject: 'Role Align', A: analysis.section_scores.target_role_alignment },
+    ]
+  }, [analysis.section_scores])
+
+  // Normalize strengths and weaknesses
+  const renderList = (items: any[], isStrength: boolean) => {
+    return items.map((item, i) => {
+      const isObj = typeof item === 'object' && item !== null
+      const point = isObj ? item.point : item
+      const confidence = isObj ? item.confidence : null
+      return (
+        <li key={i} className="flex gap-3 text-slate-200">
+          <span className={`shrink-0 ${isStrength ? 'text-emerald-500' : 'text-amber-500'}`}>•</span>
+          <div className="flex flex-col gap-1.5">
+            <span className="leading-relaxed text-sm">{point}</span>
+            {confidence && <div className="mt-0.5"><ConfidenceBadge level={confidence} /></div>}
+          </div>
+        </li>
+      )
+    })
+  }
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-12">
@@ -177,7 +189,6 @@ export default function ResultsDashboard() {
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
-          {/* View Toggle */}
           {analysis.simple_review && (
             <div className="flex rounded-xl border border-white/10 bg-white/5 p-1">
               <button
@@ -198,57 +209,37 @@ export default function ResultsDashboard() {
               </button>
             </div>
           )}
-          <Link
-            to="/upload"
-            className="rounded-xl border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-medium transition hover:bg-white/10 flex items-center"
-          >
+          <Link to="/upload" className="rounded-xl border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-medium transition hover:bg-white/10 flex items-center">
             ↑ Upload New
           </Link>
         </div>
       </div>
 
-      {/* Resume Detection Warning / Confidence */}
-      {analysis.validation && (
-        <div className="mb-8 flex flex-col gap-4">
-          {/* Confidence Indicator */}
-          <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-6 py-4">
-            <div className="flex items-center gap-3">
-              <span className="text-xl">🔍</span>
-              <div>
-                <span className="text-sm text-slate-400 font-medium block">Resume Detection Confidence</span>
-                <span className="text-lg font-bold text-white">
-                  {analysis.validation.confidence}% → {analysis.validation.confidence >= 75 ? 'Likely Resume' : 'Probably Resume'}
-                </span>
-              </div>
+      {/* Recruiter Summary (Top Highlight) */}
+      {!isSimple && analysis.recruiter_summary && (
+        <div className="mb-8 overflow-hidden rounded-2xl border border-violet-500/30 bg-gradient-to-br from-violet-900/40 to-indigo-900/40 shadow-2xl shadow-violet-500/10">
+          <div className="border-b border-white/10 bg-white/5 px-6 py-4 flex items-center gap-3">
+            <span className="text-2xl">📋</span>
+            <h2 className="text-lg font-bold text-violet-100">Recruiter's Desk Summary</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-white/10">
+            <div className="bg-slate-900/80 p-6">
+              <p className="text-xs font-bold uppercase tracking-widest text-violet-400 mb-2">The Standout Factor</p>
+              <p className="text-slate-200 text-sm leading-relaxed">{analysis.recruiter_summary.standout_factor}</p>
             </div>
-            <div className="h-2 w-32 bg-slate-800 rounded-full overflow-hidden">
-              <div 
-                className={`h-full rounded-full ${analysis.validation.confidence >= 80 ? 'bg-emerald-500' : 'bg-amber-500'}`} 
-                style={{ width: `${analysis.validation.confidence}%` }}
-              ></div>
+            <div className="bg-slate-900/80 p-6">
+              <p className="text-xs font-bold uppercase tracking-widest text-amber-400 mb-2">Biggest Improvement Area</p>
+              <p className="text-slate-200 text-sm leading-relaxed">{analysis.recruiter_summary.biggest_improvement_area}</p>
+            </div>
+            <div className="bg-slate-900/80 p-6">
+              <p className="text-xs font-bold uppercase tracking-widest text-emerald-400 mb-2">Interview Readiness</p>
+              <p className="text-slate-200 text-sm leading-relaxed">{analysis.recruiter_summary.interview_readiness}</p>
+            </div>
+            <div className="bg-slate-900/80 p-6">
+              <p className="text-xs font-bold uppercase tracking-widest text-blue-400 mb-2">Overall Assessment</p>
+              <p className="text-slate-200 text-sm leading-relaxed">{analysis.recruiter_summary.overall_assessment}</p>
             </div>
           </div>
-
-          {/* Missing Sections Warnings */}
-          {analysis.validation.missing_sections && analysis.validation.missing_sections.length > 0 && (
-            <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-5 text-amber-300">
-              <div className="flex gap-3 items-start">
-                <span className="text-lg mt-0.5">⚠️</span>
-                <div>
-                  <h4 className="font-semibold text-amber-200">Warning: Missing Important Sections</h4>
-                  <p className="mt-1 text-sm text-amber-300/90">
-                    The following standard resume sections were not detected: {' '}
-                    <span className="font-semibold text-white">
-                      {analysis.validation.missing_sections.join(', ')}
-                    </span>.
-                  </p>
-                  <p className="mt-1.5 text-xs text-amber-400/80">
-                    We've still generated the review based on the available content, but we highly recommend adding these sections to pass applicant tracking systems (ATS).
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       )}
 
@@ -264,165 +255,147 @@ export default function ResultsDashboard() {
           <div className="flex-1 text-center md:text-left">
             <div className="mb-4">
               <span className="text-sm font-medium uppercase tracking-widest text-slate-400">
-                {isSimple ? 'Simplified Summary' : 'Summary'}
+                {isSimple ? 'Simplified Summary' : 'Executive Summary'}
               </span>
             </div>
-            <p className={`text-2xl font-bold leading-relaxed ${scoreColor}`}>
+            <p className={`text-xl font-bold leading-relaxed ${scoreColor}`}>
               "{displaySummary}"
             </p>
-            <div className="mt-6">
-              {analysis.readiness_score >= 80 ? (
-                <p className="text-slate-400">
-                  🌟 <strong>Excellent!</strong> Your resume is highly competitive. A few tweaks and
-                  you're ready to apply.
+            {!isSimple && analysis.score_explanation && (
+              <div className="mt-6 rounded-xl bg-black/20 p-4 border border-white/5">
+                <p className="text-sm text-slate-300">
+                  <span className="font-semibold text-white">Score Explanation:</span> {analysis.score_explanation}
                 </p>
-              ) : analysis.readiness_score >= 60 ? (
-                <p className="text-slate-400">
-                  💪 <strong>Good foundation.</strong> You're on the right track, but there's room for improvement to stand out.
-                </p>
-              ) : (
-                <p className="text-slate-400">
-                  🔧 <strong>Needs some work.</strong> Follow the roadmap below to better align your resume with your target role.
-                </p>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-        {/* Strengths */}
-        <section className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-6">
-          <h2 className="mb-5 text-xl font-bold text-emerald-400">✅ {isSimple ? 'What You Did Well' : 'Strengths'}</h2>
-          <ul className="space-y-3">
-            {displayStrengths.map((strength, i) => (
-              <li key={i} className="flex gap-3 text-slate-200">
-                <span className="shrink-0 text-emerald-500">•</span>
-                <span className="leading-relaxed">{strength}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        {/* Weaknesses */}
-        <section className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-6">
-          <h2 className="mb-5 text-xl font-bold text-amber-400">⚠️ {isSimple ? 'What Needs Fixing' : 'Weaknesses'}</h2>
-          <ul className="space-y-3">
-            {displayWeaknesses.map((weakness, i) => (
-              <li key={i} className="flex gap-3 text-slate-200">
-                <span className="shrink-0 text-amber-500">•</span>
-                <span className="leading-relaxed">{weakness}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      </div>
-
-      {/* Detailed Feedback Sections */}
-      <section className="mb-8 space-y-6">
-        <h2 className="text-xl font-bold">{isSimple ? 'Feedback Explained Simply' : 'Detailed Feedback'}</h2>
-        
-        {isSimple && analysis.simple_review ? (
-          <>
-            {analysis.simple_review.section_feedback.map((sf, i) => (
-              <div key={i} className="rounded-2xl border border-white/10 bg-white/5 p-6">
-                <h3 className="mb-2 text-lg font-semibold text-emerald-400">{sf.section}</h3>
-                <p className="leading-relaxed text-slate-200">{sf.feedback}</p>
-              </div>
-            ))}
-          </>
-        ) : (
-          <>
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-              <h3 className="mb-2 text-lg font-semibold text-violet-400">Resume Structure</h3>
-              <p className="leading-relaxed text-slate-200">{analysis.resume_structure_feedback}</p>
+      {/* Radar Chart for Section Scores */}
+      {!isSimple && radarData.length > 0 && (
+        <section className="mb-8 rounded-2xl border border-white/10 bg-white/5 p-6">
+          <h2 className="mb-6 text-xl font-bold">🎯 Section-by-Section Breakdown</h2>
+          <div className="flex flex-col md:flex-row gap-8 items-center">
+            <div className="h-72 w-full md:w-1/2">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
+                  <PolarGrid stroke="rgba(255,255,255,0.1)" />
+                  <PolarAngleAxis dataKey="subject" tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                  <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                  <Radar name="Score" dataKey="A" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.4} />
+                </RadarChart>
+              </ResponsiveContainer>
             </div>
-
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-              <h3 className="mb-2 text-lg font-semibold text-violet-400">Projects & Experience</h3>
-              <p className="leading-relaxed text-slate-200">{analysis.project_feedback}</p>
+            <div className="w-full md:w-1/2 grid grid-cols-2 gap-4">
+              {radarData.map((d, i) => (
+                <div key={i} className="flex flex-col rounded-xl bg-black/20 p-4 border border-white/5">
+                  <span className="text-xs text-slate-400 font-semibold uppercase">{d.subject}</span>
+                  <span className={`text-xl font-bold ${d.A >= 80 ? 'text-emerald-400' : d.A >= 60 ? 'text-amber-400' : 'text-red-400'}`}>{d.A}/100</span>
+                </div>
+              ))}
             </div>
-
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-              <h3 className="mb-2 text-lg font-semibold text-violet-400">Skills Alignment</h3>
-              <p className="leading-relaxed text-slate-200">{analysis.skills_feedback}</p>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-              <h3 className="mb-2 text-lg font-semibold text-violet-400">Target Role Fit</h3>
-              <p className="leading-relaxed text-slate-200">{analysis.target_role_fit}</p>
-            </div>
-          </>
-        )}
-      </section>
-
-      {/* Resume-Specific Observations */}
-      {analysis.resume_specific_observations && analysis.resume_specific_observations.length > 0 && (
-        <section className="mb-8">
-          <h2 className="mb-5 text-xl font-bold">🔍 Resume-Specific Observations</h2>
-          <div className="space-y-3">
-            {analysis.resume_specific_observations.map((obs, i) => (
-              <div
-                key={i}
-                className="flex items-start gap-4 rounded-xl border border-blue-500/20 bg-blue-500/5 p-4"
-              >
-                <span className="mt-0.5 shrink-0 text-blue-400 text-lg">💡</span>
-                <p className="leading-relaxed text-slate-200 text-sm">{obs}</p>
-              </div>
-            ))}
           </div>
         </section>
       )}
-      {/* Fix It Roadmap */}
-      <section className="mb-12">
-        <h2 className="mb-5 text-xl font-bold">🛣️ {isSimple ? 'Step-by-Step Fixes' : 'Improvement Roadmap'}</h2>
-        <div className="space-y-4">
-          {displayRoadmap.map((item, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-4 rounded-xl border border-white/10 bg-white/5 p-5 transition hover:border-violet-500/30 hover:bg-white/[0.07]"
-            >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 text-sm font-bold">
-                {i + 1}
-              </div>
-              <p className="leading-relaxed text-slate-200">{item}</p>
-            </div>
-          ))}
-        </div>
-      </section>
 
-      {/* Progress Tracker */}
-      <div className="mb-8 rounded-2xl border border-white/10 bg-white/5 p-6">
-        <h3 className="mb-4 font-semibold">Your Progress</h3>
-        <div className="mb-2 flex items-center justify-between text-sm">
-          <span className="text-slate-400">{isSimple ? 'Tasks Done' : 'Roadmap completion'}</span>
-          <span className="font-medium">0 / {displayRoadmap.length} steps</span>
-        </div>
-        <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
-          <div className="h-full w-0 rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 transition-all duration-500" />
-        </div>
-        <p className="mt-3 text-xs text-slate-500">
-          💡 Come back after making changes to track your improvement
-        </p>
+      {/* Strengths & Weaknesses */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+        <section className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-6">
+          <h2 className="mb-5 text-xl font-bold text-emerald-400">✅ {isSimple ? 'What You Did Well' : 'Strengths'}</h2>
+          <ul className="space-y-4">
+            {renderList(isSimple ? analysis.simple_review!.strengths : analysis.strengths, true)}
+          </ul>
+        </section>
+        <section className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-6">
+          <h2 className="mb-5 text-xl font-bold text-amber-400">⚠️ {isSimple ? 'What Needs Fixing' : 'Weaknesses'}</h2>
+          <ul className="space-y-4">
+            {renderList(isSimple ? analysis.simple_review!.weaknesses : analysis.weaknesses, false)}
+          </ul>
+        </section>
       </div>
+
+      {/* Target Role Comparison */}
+      {!isSimple && analysis.target_role_comparison && (
+        <section className="mb-8 rounded-2xl border border-blue-500/20 bg-blue-500/5 p-6">
+          <h2 className="mb-4 text-xl font-bold text-blue-400">⚖️ Target Role Alignment</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="rounded-xl bg-black/20 p-5 border border-white/5">
+              <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400 mb-2">Industry Expectations</h3>
+              <p className="text-sm text-slate-200 leading-relaxed">{analysis.target_role_comparison.role_expectations}</p>
+            </div>
+            <div className="rounded-xl bg-black/20 p-5 border border-white/5">
+              <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400 mb-2">Your Alignment</h3>
+              <p className="text-sm text-slate-200 leading-relaxed">{analysis.target_role_comparison.candidate_alignment}</p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Ranked Recommendations Roadmap */}
+      <section className="mb-12">
+        <h2 className="mb-5 text-xl font-bold">🛣️ {isSimple ? 'Step-by-Step Fixes' : 'Prioritized Improvement Roadmap'}</h2>
+        
+        {isSimple && analysis.simple_review ? (
+          <div className="space-y-4">
+            {analysis.simple_review.improvement_roadmap.map((item: string, i: number) => (
+              <div key={i} className="flex items-center gap-4 rounded-xl border border-white/10 bg-white/5 p-5">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 text-sm font-bold">{i + 1}</div>
+                <p className="leading-relaxed text-slate-200">{item}</p>
+              </div>
+            ))}
+          </div>
+        ) : analysis.recommendations ? (
+          <div className="space-y-8">
+            {analysis.recommendations.high_impact.length > 0 && (
+              <div>
+                <h3 className="flex items-center gap-2 font-bold text-red-400 mb-3"><span className="text-xl">🚨</span> High Impact (Do these first)</h3>
+                <div className="space-y-3">
+                  {analysis.recommendations.high_impact.map((rec, i) => (
+                    <div key={i} className="rounded-xl border border-red-500/20 bg-red-500/5 p-4 text-sm text-slate-200">{rec}</div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {analysis.recommendations.medium_impact.length > 0 && (
+              <div>
+                <h3 className="flex items-center gap-2 font-bold text-amber-400 mb-3"><span className="text-xl">⚡</span> Medium Impact</h3>
+                <div className="space-y-3">
+                  {analysis.recommendations.medium_impact.map((rec, i) => (
+                    <div key={i} className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 text-sm text-slate-200">{rec}</div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {analysis.recommendations.low_impact.length > 0 && (
+              <div>
+                <h3 className="flex items-center gap-2 font-bold text-slate-300 mb-3"><span className="text-xl">💡</span> Low Impact (Quick Polish)</h3>
+                <div className="space-y-3">
+                  {analysis.recommendations.low_impact.map((rec, i) => (
+                    <div key={i} className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-slate-300">{rec}</div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {analysis.improvement_roadmap?.map((item: string, i: number) => (
+              <div key={i} className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-slate-200">{item}</div>
+            ))}
+          </div>
+        )}
+      </section>
 
       {/* CTA */}
       <div className="rounded-2xl bg-gradient-to-br from-violet-600/25 to-indigo-600/25 p-8 text-center ring-1 ring-white/10">
         <h3 className="mb-2 text-xl font-bold">Ready to analyze again?</h3>
-        <p className="mb-6 text-slate-400">
-          Upload your updated resume anytime to see your progress and get fresh feedback.
-        </p>
+        <p className="mb-6 text-slate-400">Upload your updated resume anytime to see your progress and get fresh feedback.</p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link
-            to="/upload"
-            className="inline-block rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-8 py-3 font-semibold shadow-lg shadow-violet-500/20 transition hover:opacity-90"
-          >
+          <Link to="/upload" className="inline-block rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-8 py-3 font-semibold shadow-lg shadow-violet-500/20 transition hover:opacity-90">
             Upload Updated Resume
           </Link>
-          <Link
-            to={email ? `/tracker?email=${encodeURIComponent(email)}` : '/tracker'}
-            className="inline-block rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-8 py-3 font-semibold text-emerald-400 transition hover:bg-emerald-500/20"
-          >
+          <Link to={email ? `/tracker?email=${encodeURIComponent(email)}` : '/tracker'} className="inline-block rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-8 py-3 font-semibold text-emerald-400 transition hover:bg-emerald-500/20">
             📈 View Growth Tracker
           </Link>
         </div>

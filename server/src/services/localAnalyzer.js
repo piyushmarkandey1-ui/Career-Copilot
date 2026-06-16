@@ -544,29 +544,62 @@ function analyzeLocally(resumeText, targetRole) {
     observations.push(`The resume was analyzed successfully. No single section stands out as uniquely strong or problematic — focus on adding metrics and deploying projects to raise the overall score.`);
   }
 
+  // ── Mock Section Scores for Fallback ──────────────────────────────────────
+  const section_scores = {
+    layout: bulletCount > 5 && foundSections.length >= 4 ? 85 : 55,
+    contact_info: (hasEmail ? 50 : 0) + (hasPhone ? 20 : 0) + (hasLinkedin ? 20 : 0) + (hasGithub ? 10 : 0),
+    education: degreeInfo && collegeName ? 90 : degreeInfo ? 70 : hasDegree ? 50 : 20,
+    skills: Math.min(100, (foundCoreSkills.length / roleConfig.core.length) * 100 + (foundBonusSkills.length * 5)),
+    projects: hasProjects ? (hasGithubLinks ? 85 : 60) + (hasLiveLinks ? 15 : 0) : 20,
+    experience: hasExperience ? (hasMetrics ? 85 : 60) : 10,
+    ats_compatibility: Math.min(100, (foundAtsKeywords.length / roleConfig.ats.length) * 100),
+    target_role_alignment: score + 5
+  };
+
+  const mapToConfidence = (item) => {
+    return {
+      point: item,
+      confidence: "High" // Hardcoded to High for local heuristic evidence
+    };
+  };
+
+  const high_impact = roadmap.filter(r => r.includes("metrics") || r.includes("projects") || r.includes("experience")).slice(0, 3);
+  const medium_impact = roadmap.filter(r => !high_impact.includes(r)).slice(0, 2);
+  const low_impact = roadmap.filter(r => !high_impact.includes(r) && !medium_impact.includes(r)).slice(0, 1);
+
+  if (high_impact.length === 0) high_impact.push(roadmap[0] || "Review ATS formatting.");
+  if (medium_impact.length === 0) medium_impact.push(roadmap[1] || "Proofread document.");
+  if (low_impact.length === 0) low_impact.push(roadmap[2] || "Update contact details if needed.");
+
   return {
     readiness_score: score,
-    summary,
-    strengths: strengths.slice(0, 5),
-    weaknesses: weaknesses.slice(0, 5),
-    resume_structure_feedback: structureFeedback,
-    project_feedback: projectFeedback,
-    skills_feedback: skillsFeedback,
-    target_role_fit: targetRoleFit,
-    improvement_roadmap: roadmap.slice(0, 6),
+    score_explanation: `Score of ${score} calculated based on core skills (${foundCoreSkills.length}), ATS matches, and project presence.`,
+    executive_summary: summary,
+    candidate_profile_internal: {
+      education_level: degreeInfo || "Unknown",
+      experience_level: hasExperience ? "Experienced" : "Entry Level",
+      top_skills: foundCoreSkills.slice(0, 5),
+      target_role: targetRole,
+      notable_achievements: certifications
+    },
+    section_scores,
+    strengths: strengths.slice(0, 5).map(mapToConfidence),
+    weaknesses: weaknesses.slice(0, 5).map(mapToConfidence),
+    recommendations: {
+      high_impact,
+      medium_impact,
+      low_impact
+    },
     resume_specific_observations: observations.slice(0, 5),
-    generic_feedback_detected: false,
-    simple_review: {
-      summary: summary,
-      strengths: strengths.slice(0, 5).map(s => `Good: ${s}`),
-      weaknesses: weaknesses.slice(0, 5).map(w => `Needs Fix: ${w}`),
-      improvement_roadmap: roadmap.slice(0, 6).map(r => `Action: ${r}`),
-      section_feedback: [
-        { section: 'Structure', feedback: structureFeedback },
-        { section: 'Projects', feedback: projectFeedback },
-        { section: 'Skills', feedback: skillsFeedback },
-        { section: 'Role Fit', feedback: targetRoleFit }
-      ]
+    recruiter_summary: {
+      standout_factor: strengths.length > 0 ? strengths[0] : "Clean layout",
+      biggest_improvement_area: weaknesses.length > 0 ? weaknesses[0] : "Needs more metrics",
+      interview_readiness: score >= 75 ? "Ready" : score >= 55 ? "Almost Ready" : "Needs Work",
+      overall_assessment: targetRoleFit
+    },
+    target_role_comparison: {
+      role_expectations: `Requires deep knowledge of ${roleConfig.core.slice(0, 3).join(', ')}.`,
+      candidate_alignment: `Candidate has matched ${foundCoreSkills.length} core skills.`
     }
   };
 }
