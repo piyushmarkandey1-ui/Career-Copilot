@@ -1,6 +1,7 @@
 import { useState, useRef, DragEvent, ChangeEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { UploadCloud, FileText, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
+import { BASE_URL } from '../config/api'
 
 type UploadState = 'idle' | 'dragging' | 'uploading' | 'done' | 'error'
 
@@ -79,7 +80,7 @@ export default function UploadResumePage() {
       }, 300)
 
       // Upload to backend
-      const response = await fetch('/api/analyze', {
+      const response = await fetch(`${BASE_URL}/api/analyze`, {
         method: 'POST',
         body: formData,
       })
