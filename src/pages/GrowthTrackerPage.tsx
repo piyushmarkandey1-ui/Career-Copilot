@@ -256,12 +256,26 @@ export default function GrowthTrackerPage() {
       const res = await fetch(url)
       const json = await res.json()
       if (!res.ok) throw new Error(json.message || 'Failed to fetch history.')
-      setAllRecords(json.data ?? [])
-      setAvailableRoles(json.available_roles ?? [])
-      setIsPersisted(json.persisted ?? true)
+      const fetchedRecords = json.data ?? []
+      const fetchedRoles = json.available_roles ?? []
+      const persisted = json.persisted ?? true
+
+      setAllRecords(fetchedRecords)
+      setAvailableRoles(fetchedRoles)
+      setIsPersisted(persisted)
       setSubmittedEmail(trimmed)
       setSelectedRole('')
       setFetched(true)
+
+      // Track successful history fetch
+      if (typeof pendo !== 'undefined') {
+        pendo.track("growth_history_fetched", {
+          recordsCount: fetchedRecords.length,
+          availableRolesCount: fetchedRoles.length,
+          isPersisted: persisted,
+          hasResults: fetchedRecords.length > 0,
+        })
+      }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Something went wrong.')
     } finally {
@@ -282,6 +296,14 @@ export default function GrowthTrackerPage() {
       const json = await res.json()
       if (!res.ok) throw new Error(json.message || 'Failed to clear history.')
       
+      // Track successful history clear (capture counts before resetting state)
+      if (typeof pendo !== 'undefined') {
+        pendo.track("growth_history_cleared", {
+          recordsCleared: allRecords.length,
+          availableRolesCount: availableRoles.length,
+        })
+      }
+
       // Reset state for a fresh start
       setAllRecords([])
       setAvailableRoles([])

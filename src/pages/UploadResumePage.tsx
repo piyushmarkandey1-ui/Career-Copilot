@@ -68,6 +68,16 @@ export default function UploadResumePage() {
     setErrorMessage('')
 
     try {
+      // Track resume analysis submission
+      if (typeof pendo !== 'undefined') {
+        pendo.track("resume_analysis_submitted", {
+          targetRole,
+          fileName: file.name,
+          fileSizeBytes: file.size,
+          hasEmail: Boolean(email.trim()),
+        })
+      }
+
       // Create form data
       const formData = new FormData()
       formData.append('resume', file)
@@ -91,6 +101,21 @@ export default function UploadResumePage() {
       const data = await response.json()
 
       if (data.success) {
+        // Track successful resume analysis
+        if (typeof pendo !== 'undefined') {
+          pendo.track("resume_analysis_completed", {
+            targetRole: data.data.targetRole,
+            readinessScore: data.data.readiness_score,
+            wordCount: data.data.wordCount,
+            strengthsCount: data.data.strengths?.length ?? 0,
+            weaknessesCount: data.data.weaknesses?.length ?? 0,
+            improvementRoadmapCount: data.data.improvement_roadmap?.length ?? 0,
+            genericFeedbackDetected: Boolean(data.data.generic_feedback_detected),
+            validationConfidence: data.data.validation?.confidence ?? 0,
+            fileName: file.name,
+          })
+        }
+
         setState('done')
         setTimeout(() => {
           navigate('/results', {
@@ -103,10 +128,32 @@ export default function UploadResumePage() {
           })
         }, 500)
       } else {
+        // Track server-side analysis failure
+        if (typeof pendo !== 'undefined') {
+          pendo.track("resume_analysis_failed", {
+            targetRole,
+            errorMessage: (data.message || 'Failed to analyze resume').substring(0, 100),
+            fileName: file.name,
+            fileSizeBytes: file.size,
+            failureType: "server_error",
+          })
+        }
+
         setState('error')
         setErrorMessage(data.message || 'Failed to analyze resume')
       }
     } catch (error) {
+      // Track network/connection failure
+      if (typeof pendo !== 'undefined') {
+        pendo.track("resume_analysis_failed", {
+          targetRole,
+          errorMessage: "Failed to connect to server",
+          fileName: file?.name ?? "unknown",
+          fileSizeBytes: file?.size ?? 0,
+          failureType: "network_error",
+        })
+      }
+
       console.error('Upload error:', error)
       setState('error')
       setErrorMessage('Failed to connect to server. Make sure the backend is running.')
