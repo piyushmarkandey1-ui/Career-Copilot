@@ -85,118 +85,118 @@ body {
 /* ─── White Glassmorphic Adaptive Theme Overrides ────────────────────────── */
 
 /* Text colors: translate dark-mode optimized colors to high-contrast light colors */
-.light-mode *.text-white, .light-mode *.text-slate-50 {
+.light-mode .text-white, .light-mode .text-slate-50 {
   color: #0f172a !important; /* slate-900 */
 }
-.light-mode *.text-slate-100, .light-mode *.text-slate-200 {
+.light-mode .text-slate-100, .light-mode .text-slate-200 {
   color: #0f172a !important; /* slate-900 */
 }
-.light-mode *.text-slate-300 {
+.light-mode .text-slate-300 {
   color: #0f172a !important; /* slate-900 */
 }
-.light-mode *.text-slate-400 {
+.light-mode .text-slate-400 {
   color: #0f172a !important; /* slate-900 */
 }
-.light-mode *.text-slate-500 {
+.light-mode .text-slate-500 {
   color: #334155 !important; /* slate-700 */
 }
 
 /* Highlight text colors */
-.light-mode *.text-indigo-400, .light-mode *.text-indigo-300 {
+.light-mode .text-indigo-400, .light-mode .text-indigo-300 {
   color: #4f46e5 !important; /* indigo-600 */
 }
-.light-mode *.text-violet-400 {
+.light-mode .text-violet-400, .light-mode .text-violet-300 {
   color: #7c3aed !important; /* violet-600 */
 }
-.light-mode *.text-fuchsia-400 {
+.light-mode .text-fuchsia-400 {
   color: #c026d3 !important; /* fuchsia-600 */
 }
-.light-mode *.text-emerald-400 {
+.light-mode .text-emerald-400 {
   color: #059669 !important; /* emerald-600 */
 }
-.light-mode *.text-amber-400, .light-mode *.text-amber-300 {
+.light-mode .text-amber-400, .light-mode .text-amber-300 {
   color: #b45309 !important; /* amber-700 */
 }
-.light-mode *.text-rose-400 {
+.light-mode .text-rose-400 {
   color: #e11d48 !important; /* rose-600 */
 }
-.light-mode *.text-cyan-400 {
+.light-mode .text-cyan-400 {
   color: #0891b2 !important; /* cyan-600 */
 }
-.light-mode *.text-orange-400 {
+.light-mode .text-orange-400 {
   color: #ea580c !important; /* orange-600 */
 }
-.light-mode *.text-blue-400 {
+.light-mode .text-blue-400 {
   color: #2563eb !important; /* blue-600 */
 }
 
 /* Filled backgrounds: make dark/black elements look like clean frosted white glass */
-.light-mode *.bg-slate-950, .light-mode *.bg-slate-900, .light-mode *.bg-slate-800, 
-.light-mode *.bg-slate-950\/50, .light-mode *.bg-slate-900\/50, .light-mode *.bg-slate-800\/50,
-.light-mode *.bg-white\/5, .light-mode *.bg-white\/10, .light-mode *.bg-black\/20 {
+.light-mode .bg-slate-950, .light-mode .bg-slate-900, .light-mode .bg-slate-800, 
+.light-mode .bg-slate-950\/50, .light-mode .bg-slate-900\/50, .light-mode .bg-slate-800\/50,
+.light-mode .bg-white\/5, .light-mode .bg-white\/10, .light-mode .bg-black\/20 {
   background-color: rgba(255, 255, 255, 0.45) !important;
   backdrop-filter: blur(24px) !important;
   -webkit-backdrop-filter: blur(24px) !important;
 }
 
 /* Nested white-background card items */
-.light-mode *.bg-white\/5 {
+.light-mode .bg-white\/5 {
   background-color: rgba(255, 255, 255, 0.35) !important;
 }
-.light-mode *.bg-white\/10 {
+.light-mode .bg-white\/10 {
   background-color: rgba(255, 255, 255, 0.55) !important;
 }
-.light-mode *.bg-white\/20 {
+.light-mode .bg-white\/20 {
   background-color: rgba(255, 255, 255, 0.75) !important;
 }
 
 /* Badge and indicator colors */
-.light-mode *.bg-indigo-500\/10, .light-mode *.bg-indigo-500\/20 {
+.light-mode .bg-indigo-500\/10, .light-mode .bg-indigo-500\/20 {
   background-color: rgba(99, 102, 241, 0.08) !important;
   border-color: rgba(99, 102, 241, 0.18) !important;
 }
-.light-mode *.bg-fuchsia-500\/20 {
+.light-mode .bg-fuchsia-500\/20 {
   background-color: rgba(240, 70, 250, 0.08) !important;
   border-color: rgba(240, 70, 250, 0.18) !important;
 }
-.light-mode *.bg-emerald-500\/20, .light-mode *.bg-emerald-500\/15 {
+.light-mode .bg-emerald-500\/20, .light-mode .bg-emerald-500\/15 {
   background-color: rgba(16, 185, 129, 0.08) !important;
   border-color: rgba(16, 185, 129, 0.18) !important;
 }
-.light-mode *.bg-red-500\/20, .light-mode *.bg-red-500\/15, .light-mode *.bg-red-500\/10 {
+.light-mode .bg-red-500\/20, .light-mode .bg-red-500\/15, .light-mode .bg-red-500\/10 {
   background-color: rgba(239, 68, 68, 0.08) !important;
   border-color: rgba(239, 68, 68, 0.18) !important;
 }
-.light-mode *.bg-amber-500\/10, .light-mode *.bg-amber-500\/5 {
+.light-mode .bg-amber-500\/10, .light-mode .bg-amber-500\/5 {
   background-color: rgba(245, 158, 11, 0.08) !important;
   border-color: rgba(245, 158, 11, 0.18) !important;
 }
-.light-mode *.bg-slate-500\/15 {
+.light-mode .bg-slate-500\/15 {
   background-color: rgba(100, 116, 139, 0.08) !important;
   border-color: rgba(100, 116, 139, 0.18) !important;
 }
-.light-mode *.bg-violet-500\/5, .light-mode *.bg-violet-500\/20 {
+.light-mode .bg-violet-500\/5, .light-mode .bg-violet-500\/20 {
   background-color: rgba(139, 92, 246, 0.08) !important;
   border-color: rgba(139, 92, 246, 0.18) !important;
 }
 
 /* Borders */
-.light-mode *.border-slate-800, .light-mode *.border-slate-700, .light-mode *.border-slate-600,
-.light-mode *.border-white\/10, .light-mode *.border-white\/5 {
+.light-mode .border-slate-800, .light-mode .border-slate-700, .light-mode .border-slate-600,
+.light-mode .border-white\/10, .light-mode .border-white\/5 {
   border-color: rgba(255, 255, 255, 0.65) !important;
 }
-.light-mode *.border-white\/20 {
+.light-mode .border-white\/20 {
   border-color: rgba(255, 255, 255, 0.85) !important;
 }
 
 /* Icon box borders and backgrounds */
-.light-mode *.border-indigo-500\/30, .light-mode *.border-indigo-500\/20 {
+.light-mode .border-indigo-500\/30, .light-mode .border-indigo-500\/20 {
   border-color: rgba(99, 102, 241, 0.25) !important;
 }
-.light-mode *.border-fuchsia-500\/30, .light-mode *.border-fuchsia-500\/20 {
+.light-mode .border-fuchsia-500\/30, .light-mode .border-fuchsia-500\/20 {
   border-color: rgba(240, 70, 250, 0.25) !important;
 }
-.light-mode *.border-emerald-500\/30, .light-mode *.border-emerald-500\/20 {
+.light-mode .border-emerald-500\/30, .light-mode .border-emerald-500\/20 {
   border-color: rgba(16, 185, 129, 0.25) !important;
 }
 
@@ -221,24 +221,24 @@ option {
 }
 
 /* Dashed Dropzone styling */
-.light-mode *.border-dashed {
+.light-mode .border-dashed {
   border-color: rgba(99, 102, 241, 0.3) !important;
   border-width: 2px !important;
   background-color: rgba(255, 255, 255, 0.4) !important;
 }
-.light-mode *.border-dashed:hover {
+.light-mode .border-dashed:hover {
   border-color: #6366f1 !important;
   background-color: rgba(99, 102, 241, 0.04) !important;
 }
 
 /* Hover overrides for buttons and toggles */
-.light-mode *.hover\:bg-white\/10:hover {
+.light-mode .hover\:bg-white\/10:hover {
   background-color: rgba(255, 255, 255, 0.65) !important;
 }
-.light-mode *.hover\:bg-white\/5:hover {
+.light-mode .hover\:bg-white\/5:hover {
   background-color: rgba(255, 255, 255, 0.5) !important;
 }
-.light-mode *.hover\:text-white:hover {
+.light-mode .hover\:text-white:hover {
   color: #0f172a !important;
 }
 
@@ -253,22 +253,27 @@ nav.glass-strong {
 }
 
 /* Custom Gradients mapping */
-.light-mode *.from-indigo-400 {
+.light-mode .from-indigo-400 {
   --tw-gradient-from: #4f46e5 !important;
   --tw-gradient-to: rgba(79, 70, 229, 0) !important;
   --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
 }
-.light-mode *.to-purple-400 {
+.light-mode .from-white {
+  --tw-gradient-from: #0f172a !important; /* slate-900 */
+  --tw-gradient-to: rgba(15, 23, 42, 0) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+.light-mode .to-purple-400 {
   --tw-gradient-to: #7c3aed !important;
 }
-.light-mode *.from-violet-400 {
+.light-mode .from-violet-400 {
   --tw-gradient-from: #7c3aed !important;
 }
-.light-mode *.via-fuchsia-400 {
+.light-mode .via-fuchsia-400 {
   --tw-gradient-to: rgba(192, 38, 211, 0) !important;
   --tw-gradient-stops: var(--tw-gradient-from), #c026d3 !important;
 }
-.light-mode *.to-indigo-400 {
+.light-mode .to-indigo-400 {
   --tw-gradient-to: #4f46e5 !important;
 }
 
@@ -279,15 +284,15 @@ nav.glass-strong {
 }
 
 /* ─── Preserve White Text for Filled/Vibrant UI Elements ────────────────── */
-.light-mode *.bg-indigo-600, .light-mode *.bg-violet-600, .light-mode *.bg-emerald-600, .light-mode *.bg-fuchsia-600,
-.light-mode *.bg-indigo-500, .light-mode *.bg-violet-500, .light-mode *.bg-emerald-500, .light-mode *.bg-rose-600, .light-mode *.bg-red-600,
-.light-mode *.bg-gradient-to-r, .light-mode *.bg-gradient-to-br, .light-mode *.btn-primary {
+.light-mode .bg-indigo-600, .light-mode .bg-violet-600, .light-mode .bg-emerald-600, .light-mode .bg-fuchsia-600,
+.light-mode .bg-indigo-500, .light-mode .bg-violet-500, .light-mode .bg-emerald-500, .light-mode .bg-rose-600, .light-mode .bg-red-600,
+.light-mode .bg-gradient-to-r, .light-mode .bg-gradient-to-br, .light-mode .btn-primary {
   color: #ffffff !important;
 }
 
-.light-mode *.bg-indigo-600 *, .light-mode *.bg-violet-600 *, .light-mode *.bg-emerald-600 *, .light-mode *.bg-fuchsia-600 *,
-.light-mode *.bg-indigo-500 *, .light-mode *.bg-violet-500 *, .light-mode *.bg-emerald-500 *, .light-mode *.bg-rose-600 *, .light-mode *.bg-red-600 *,
-.light-mode *.bg-gradient-to-r *, .light-mode *.bg-gradient-to-br *, .light-mode *.btn-primary * {
+.light-mode .bg-indigo-600 *, .light-mode .bg-violet-600 *, .light-mode .bg-emerald-600 *, .light-mode .bg-fuchsia-600 *,
+.light-mode .bg-indigo-500 *, .light-mode .bg-violet-500 *, .light-mode .bg-emerald-500 *, .light-mode .bg-rose-600 *, .light-mode .bg-red-600 *,
+.light-mode .bg-gradient-to-r *, .light-mode .bg-gradient-to-br *, .light-mode .btn-primary * {
   color: #ffffff !important;
 }
 

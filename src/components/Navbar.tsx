@@ -51,8 +51,8 @@ export default function Navbar({ theme, toggleTheme }: { theme: 'light-mode' | '
                 to={link.path}
                 className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 ${
                   location.pathname === link.path
-                    ? 'bg-indigo-500/10 text-indigo-600 dark:bg-white/10 dark:text-white border border-indigo-500/20 dark:border-white/20'
-                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
+                    ? 'bg-white/10 text-white border border-white/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                    : 'text-slate-400 hover:text-white hover:bg-white/5'
                 }`}
               >
                 {link.label}
@@ -67,7 +67,7 @@ export default function Navbar({ theme, toggleTheme }: { theme: 'light-mode' | '
             
             <button
               onClick={toggleTheme}
-              className="ml-2 p-2 rounded-xl text-slate-500 hover:text-indigo-600 hover:bg-black/5 dark:text-slate-300 dark:hover:text-white dark:hover:bg-white/5 transition-colors"
+              className="ml-2 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
               aria-label="Toggle theme"
             >
               {theme === 'light-mode' ? <Moon size={20} /> : <Sun size={20} />}
