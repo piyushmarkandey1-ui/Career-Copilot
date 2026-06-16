@@ -66,10 +66,11 @@ const analyzeResume = async (req, res) => {
   }
 
   // ── Validate length/text availability ──────────────────────────────────────
-  if (!resumeText || resumeText.trim().length < 100) {
+  const words = resumeText ? resumeText.split(/\s+/).filter(Boolean).length : 0;
+  if (!resumeText || words < 150) {
     return res.status(422).json({
       success: false,
-      message: 'Uploaded PDF contains too little text (under 100 characters). Please ensure your PDF is not empty, corrupted, or a scanned image with no selectable text.',
+      message: 'Resume text is too limited to analyze. Please upload a complete resume.',
     });
   }
 
@@ -97,10 +98,10 @@ const analyzeResume = async (req, res) => {
     validation = detectResumeLocally(resumeText);
   }
 
-  if (!validation.is_resume || validation.confidence < 70) {
+  if (!validation.is_resume || validation.confidence < 75) {
     return res.status(422).json({
       success: false,
-      message: `Uploaded file does not appear to be a resume (Confidence: ${validation.confidence}%). Please upload a valid resume PDF.`,
+      message: 'This file does not appear to be a resume. Please upload a proper resume PDF containing sections like Education, Skills, Projects, Experience, and Contact Information.',
       validation
     });
   }

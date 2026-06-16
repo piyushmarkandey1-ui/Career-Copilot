@@ -161,36 +161,47 @@ const analyzeWithGemini = async (resumeText, targetRole) => {
 };
 
 const validateResumeWithGemini = async (resumeText) => {
-  if (!resumeText || resumeText.trim().length < 100) {
+  const words = resumeText ? resumeText.split(/\s+/).filter(Boolean).length : 0;
+  if (!resumeText || words < 150) {
     return {
       is_resume: false,
       confidence: 0,
-      missing_sections: ['Too little text']
+      reason: "Resume text is too limited to analyze. Please upload a complete resume.",
+      detected_document_type: "short_text",
+      resume_signals_found: [],
+      non_resume_signals_found: ["too_short"]
     };
   }
 
   const model = getModel();
-  const systemPrompt = `You are an AI assistant designed to detect whether a given document is a resume or CV.
+  const systemPrompt = `You are an AI assistant designed to rigorously detect whether a given document is a professional resume or CV.
 Analyze the document text and look for standard resume components:
-- Name
-- Contact information
+- Name and Contact information (Email, Phone)
 - Education section
 - Skills section
 - Projects section
-- Experience section
-- Certifications
-- Resume-like structure
+- Experience or internship section
+- Certifications or achievements
+- LinkedIn, GitHub, or portfolio link
+- Resume-style bullet points
+- Dates related to education or work
 
 Determine:
-1. "is_resume": boolean (Set to false if it does not look like a professional resume/CV, e.g. a research paper, article, recipe, code listing, or random text. Set to true if it is a CV/resume, even if some sections are missing)
-2. "confidence": integer (0 to 100) representing how likely this document is a resume. A typical resume has a confidence of 80% or above. A poor/fresher resume might have 70-80%. Non-resumes should be below 70% (usually below 40%).
-3. "missing_sections": array of strings (e.g., "Skills section", "Education section", "Contact information"). Only list standard sections that appear to be completely missing.
+1. "is_resume": boolean. Set to false if it does not look like a professional resume/CV (e.g. story, essay, research paper, assignment, article, notes, certificate, report, book, question paper, code listing, random text). Set to true ONLY if it is a CV/resume and contains at least 4 of the standard resume signals.
+2. "confidence": integer (0 to 100) representing how likely this document is a resume. Non-resumes, stories, and assignments should be below 40%. Valid resumes should be 75-100%.
+3. "reason": string explaining why it is or is not a resume.
+4. "detected_document_type": string (e.g., "resume", "story", "essay", "assignment", "unknown").
+5. "resume_signals_found": array of strings (e.g., ["Education section", "Contact info", "Skills list"]).
+6. "non_resume_signals_found": array of strings (e.g., ["Story narrative", "Chapter headers", "Essay structure"]).
 
 Return your response in this exact JSON format, with no other text, markdown formatting or wrappers:
 {
   "is_resume": <boolean>,
   "confidence": <integer>,
-  "missing_sections": ["<section name>", ...]
+  "reason": "<string>",
+  "detected_document_type": "<string>",
+  "resume_signals_found": ["<string>", ...],
+  "non_resume_signals_found": ["<string>", ...]
 }`;
 
   const prompt = `${systemPrompt}\n\nVerify this document:\n\n${resumeText.slice(0, 8000)}`;
@@ -202,10 +213,19 @@ Return your response in this exact JSON format, with no other text, markdown for
 
     let parsed = JSON.parse(jsonStr);
 
+    let is_resume = typeof parsed.is_resume === 'boolean' ? parsed.is_resume : (parsed.confidence >= 75);
+    let confidence = typeof parsed.confidence === 'number' ? Math.min(100, Math.max(0, parsed.confidence)) : 0;
+    
+    // Safety guard
+    if (confidence < 75) is_resume = false;
+
     return {
-      is_resume: typeof parsed.is_resume === 'boolean' ? parsed.is_resume : (parsed.confidence >= 70),
-      confidence: typeof parsed.confidence === 'number' ? Math.min(100, Math.max(0, parsed.confidence)) : 0,
-      missing_sections: Array.isArray(parsed.missing_sections) ? parsed.missing_sections : []
+      is_resume,
+      confidence,
+      reason: parsed.reason || (is_resume ? "Appears to be a valid resume." : "Does not meet resume criteria."),
+      detected_document_type: parsed.detected_document_type || (is_resume ? "resume" : "unknown_document"),
+      resume_signals_found: Array.isArray(parsed.resume_signals_found) ? parsed.resume_signals_found : [],
+      non_resume_signals_found: Array.isArray(parsed.non_resume_signals_found) ? parsed.non_resume_signals_found : []
     };
   } catch (err) {
     throw Object.assign(

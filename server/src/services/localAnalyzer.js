@@ -572,57 +572,98 @@ function analyzeLocally(resumeText, targetRole) {
 }
 
 function detectResumeLocally(resumeText) {
-  if (!resumeText || resumeText.trim().length < 100) {
+  const words = resumeText.split(/\s+/).filter(Boolean);
+  const wordCount = words.length;
+
+  if (!resumeText || wordCount < 150) {
     return {
       is_resume: false,
       confidence: 0,
-      missing_sections: ['Too little text']
+      reason: "Resume text is too limited to analyze. Please upload a complete resume.",
+      detected_document_type: "short_text",
+      resume_signals_found: [],
+      non_resume_signals_found: ["too_short"]
     };
   }
 
   const textLower = resumeText.toLowerCase();
 
-  // Look for sections
-  const checks = {
-    contact: /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i.test(textLower) || /\b\d{10}\b/.test(textLower) || /phone|email|linkedin|github/i.test(textLower),
+  // 1. Resume Signals
+  const signals = {
+    name: /^[A-Z][a-z]+ [A-Z][a-z]+/.test(resumeText.slice(0, 500)), // heuristic: Name near top
+    contact: /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i.test(textLower) || /(\+?\d[\d\s\-().]{7,}\d)/.test(textLower),
     education: /education|degree|bachelor|b\.tech|b\.e\.|m\.tech|bsc|msc|university|college|school/i.test(textLower),
     skills: /skills|languages|technologies|proficiencies|expertise/i.test(textLower),
-    experience: /experience|employment|work history|professional background|internship|intern\b|developer|engineer/i.test(textLower),
     projects: /projects|academic projects|personal projects/i.test(textLower),
+    experience: /experience|employment|work history|professional background|internship|intern\b|developer|engineer/i.test(textLower),
     certifications: /certifications|certificates|achievements|awards/i.test(textLower),
+    links: /linkedin\.com|github\.com|portfolio/i.test(textLower),
+    bullets: resumeText.split('\n').filter(l => /^[-•*▪➤]/.test(l.trim())).length >= 5,
+    dates: /\b(19|20)\d{2}\b/.test(textLower) || /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]* \d{4}\b/i.test(textLower)
   };
 
-  const missing_sections = [];
-  if (!checks.contact) missing_sections.push("Contact information");
-  if (!checks.education) missing_sections.push("Education section");
-  if (!checks.skills) missing_sections.push("Skills section");
-  if (!checks.experience) missing_sections.push("Experience section");
-  if (!checks.projects) missing_sections.push("Projects section");
+  const resume_signals_found = Object.keys(signals).filter(k => signals[k]);
+  const signalCount = resume_signals_found.length;
 
-  // Calculate heuristic confidence
-  let confidence = 35; // base confidence
+  // 2. Keyword checks
+  const positiveKeywords = ['education', 'skills', 'projects', 'experience', 'internship', 'certification', 'achievements', 'summary', 'objective', 'technologies', 'github', 'linkedin', 'portfolio'];
+  const negativeKeywords = ['chapter', 'story', 'once upon a time', 'characters', 'conclusion', 'abstract', 'introduction', 'bibliography', 'assignment', 'question', 'answer', 'poem', 'novel', 'essay', 'report'];
 
-  if (/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i.test(textLower)) confidence += 20; // email check is strong indicator
-  if (checks.education) confidence += 15;
-  if (checks.skills) confidence += 15;
-  if (checks.experience) confidence += 15;
-  if (checks.projects) confidence += 15;
-  if (checks.certifications) confidence += 10;
+  let positiveScore = 0;
+  let negativeScore = 0;
+  const non_resume_signals_found = [];
 
-  const wordCount = resumeText.split(/\s+/).filter(Boolean).length;
-  if (wordCount >= 60 && wordCount <= 1500) confidence += 10;
+  positiveKeywords.forEach(kw => { if (textLower.includes(kw)) positiveScore++; });
+  negativeKeywords.forEach(kw => { 
+    if (textLower.includes(kw)) {
+      negativeScore++;
+      non_resume_signals_found.push(`keyword:${kw}`);
+    }
+  });
 
-  const lines = resumeText.split('\n');
-  const bulletLines = lines.filter(l => /^[-•*▪➤]/.test(l.trim())).length;
-  if (bulletLines >= 2) confidence += 10;
+  // Story Paragraph Detection
+  // Check if text is dominated by large paragraphs without typical resume line breaks
+  const paragraphs = resumeText.split(/\n{2,}/).filter(p => p.trim().length > 100);
+  const largeParagraphs = paragraphs.filter(p => p.split(/\s+/).length > 40 && !/^[-•*▪➤]/.test(p.trim()));
+  if (largeParagraphs.length > 3 && signalCount < 5) {
+    negativeScore += 3;
+    non_resume_signals_found.push("large_story_paragraphs");
+  }
 
-  confidence = Math.min(100, confidence);
-  const is_resume = confidence >= 70;
+  // 3. Validation Logic
+  let is_resume = true;
+  let confidence = 40 + (signalCount * 5) + (positiveScore * 2) - (negativeScore * 5);
+  let reason = "Appears to be a valid resume.";
+  let detected_document_type = "resume";
+
+  if (signalCount < 4) {
+    is_resume = false;
+    reason = "Missing essential resume sections (needs at least 4 standard sections).";
+    detected_document_type = "unknown_document";
+    confidence -= 30;
+  }
+
+  if (negativeScore > positiveScore || negativeScore > 5) {
+    is_resume = false;
+    reason = "Contains too many non-resume elements (e.g. story, essay, or academic paper keywords).";
+    detected_document_type = "story_or_article";
+    confidence -= 40;
+  }
+
+  confidence = Math.min(100, Math.max(0, confidence));
+
+  if (confidence < 75) {
+    is_resume = false;
+    if (reason === "Appears to be a valid resume.") reason = "Low confidence of being a resume.";
+  }
 
   return {
     is_resume,
     confidence,
-    missing_sections
+    reason,
+    detected_document_type,
+    resume_signals_found,
+    non_resume_signals_found
   };
 }
 

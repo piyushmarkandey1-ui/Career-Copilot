@@ -10,19 +10,19 @@ const { analyzeLocally, detectResumeLocally } = require('./src/services/localAna
 
 const resumes = [
   {
-    name: '🟢 Strong Frontend Developer',
+    name: '🟢 Valid Resume (Should Pass)',
     role: 'Frontend Developer',
     text: `
 John Doe | john@example.com | github.com/johndoe | linkedin.com/in/johndoe | +91-9876543210
 
 EDUCATION
 B.Tech in Computer Science — IIT Delhi (2020-2024) | CGPA: 8.7/10
+Relevant Coursework: Data Structures, Algorithms, Web Development
 
 SKILLS
 Languages: JavaScript, TypeScript, HTML5, CSS3
 Frameworks: React.js, Next.js, Redux, Tailwind CSS, Vite
 Tools: Git, Webpack, Figma, Jest, Storybook
-Other: REST APIs, GraphQL, Responsive Design, Performance Optimization, Accessibility
 
 EXPERIENCE
 Frontend Developer Intern — Razorpay (June 2023 – August 2023)
@@ -37,83 +37,86 @@ E-Commerce Platform (github.com/johndoe/ecommerce | live: shop.johndoe.dev)
 - Integrated Razorpay payment gateway handling 500+ transactions/day
 - Implemented lazy loading and image optimization reducing bundle size by 35%
 
-Portfolio Website (github.com/johndoe/portfolio | live: johndoe.dev)
-- Personal portfolio using Next.js and Tailwind CSS with 98/100 Lighthouse score
-
 ACHIEVEMENTS
 - Won 1st place at HackWithInterns 2023 (300+ participants)
-- 5-star rating on HackerRank for JavaScript
 - AWS Certified Cloud Practitioner (2023)
-`,
+    `.repeat(2) // Repeat to easily pass the 150 word count
   },
   {
-    name: '🟡 Average Backend Developer',
+    name: '🔴 Story PDF (Should Fail)',
+    role: 'Software Developer (SDE)',
+    text: `
+Chapter 1: The Beginning
+Once upon a time, in a faraway land, there lived a young boy named Arthur. He loved to explore the enchanted forest near his village. 
+One day, while wandering through the woods, he stumbled upon a mysterious cave hidden behind a waterfall. The characters in this story will face many challenges.
+In conclusion, the journey was long but rewarding. The abstract concept of bravery was tested throughout the novel. 
+This story is a great example of classic literature. 
+    `.repeat(5) // Ensure word count is high enough to test the story detection, not just the length filter
+  },
+  {
+    name: '🔴 Assignment PDF (Should Fail)',
     role: 'Backend Developer',
     text: `
-Jane Smith | jane.smith@gmail.com | linkedin.com/in/janesmith
+CS101 Assignment 3: Database Systems
+Student: Jane Smith
+Question 1: Explain the difference between SQL and NoSQL databases.
+Answer: SQL databases are relational, whereas NoSQL databases are non-relational. SQL databases use structured query language and have a predefined schema. 
+Question 2: Write a SQL query to select all users who signed up in 2023.
+Answer: SELECT * FROM users WHERE signup_date >= '2023-01-01';
+Conclusion: This assignment covers basic database concepts and query writing. 
+    `.repeat(5)
+  },
+  {
+    name: '🔴 Empty / Short PDF (Should Fail)',
+    role: 'UI/UX Designer',
+    text: `
+My Resume
+Jane Doe
+Just a quick summary of my skills.
+    `
+  },
+  {
+    name: '🔴 Certificate PDF (Should Fail)',
+    role: 'Data Scientist / ML Engineer',
+    text: `
+Certificate of Completion
+This is to certify that John Smith has successfully completed the course "Machine Learning A-Z".
+Awarded on: 15th August 2023
+Instructor: Dr. Alan Turing
+This certificate verifies the completion of 40 hours of online instruction and practical exercises.
+Congratulations on your achievement!
+    `.repeat(6)
+  },
+  {
+    name: '🟡 Missing Projects but Valid (Should Pass)',
+    role: 'Backend Developer',
+    text: `
+Jane Smith | jane.smith@gmail.com | linkedin.com/in/janesmith | +1-555-0198
+
+SUMMARY
+Experienced Backend Developer with 3 years of industry experience building scalable APIs.
 
 EDUCATION
 B.E. Computer Science — VIT University (2019-2023) | CGPA: 7.2/10
+Courses: Database Management Systems, Operating Systems, Computer Networks
 
 SKILLS
-Python, Java, Node.js, Express, MySQL, MongoDB
+Languages: Python, Java, JavaScript
+Frameworks: Node.js, Express, Spring Boot
+Databases: MySQL, MongoDB, PostgreSQL
 
 EXPERIENCE
 Software Engineer — TCS (Jan 2023 – Present)
-- Worked on backend APIs for internal tools
-- Helped with database migration tasks
-- Responsible for writing unit tests
+- Worked on backend APIs for internal tools used by over 500 employees
+- Helped with database migration tasks from on-prem to AWS Cloud
+- Responsible for writing unit tests using Jest and JUnit
+- Reduced API response time by 20% through caching strategies
 
-PROJECTS
-Library Management System
-- Built using Java and MySQL
-- Basic CRUD operations for book management
-
-Todo App
-- Node.js and MongoDB application
-- Users can add and delete tasks
-
-EDUCATION
-Bachelors in Computer Engineering from VIT Vellore
-`,
-  },
-  {
-    name: '🔴 Weak / Fresh Graduate Resume',
-    role: 'Software Developer (SDE)',
-    text: `
-Rahul Verma
-rahul.verma@gmail.com
-
-EDUCATION
-B.Tech Computer Science - XYZ College 2024
-
-SKILLS
-C, C++, Python, HTML, CSS, JavaScript
-
-I am a fresher looking for opportunities in software development. I have knowledge of programming languages.
-
-PROJECTS
-Online Shopping Website
-- Made a website using HTML CSS and JavaScript
-
-Attendance System
-- Used Python to make attendance system
-
-HOBBIES
-Cricket, Reading, Gaming
-`,
-  },
-  {
-    name: '📄 Non-Resume Document',
-    role: 'Data Scientist / ML Engineer',
-    text: `
-This is a research paper abstract about quantum computing. The study analyzes the effects of
-decoherence in superconducting qubits at cryogenic temperatures. We propose a novel error correction
-scheme based on surface codes. Results demonstrate a 10x improvement in qubit lifetime.
-The methodology involves cooling qubits to 15 millikelvin using dilution refrigerators.
-References: [1] Shor 1995, [2] Steane 1996, [3] Preskill 1998.
-`,
-  },
+CERTIFICATIONS
+- AWS Certified Developer Associate (2023)
+- Oracle Certified Java Programmer
+    `.repeat(2)
+  }
 ];
 
 console.log('\n' + '='.repeat(70));
@@ -124,25 +127,24 @@ resumes.forEach((resume, i) => {
   const validation = detectResumeLocally(resume.text);
   console.log(`\n[${i + 1}] ${resume.name}`);
   console.log(`    Is Resume: ${validation.is_resume} (Confidence: ${validation.confidence}%)`);
-  console.log(`    Missing Sections: [${validation.missing_sections.join(', ')}]`);
+  console.log(`    Reason: ${validation.reason}`);
+  console.log(`    Detected Type: ${validation.detected_document_type}`);
+  console.log(`    Signals Found: [${validation.resume_signals_found.join(', ')}]`);
   
-  if (validation.is_resume && validation.confidence >= 70) {
+  if (validation.is_resume && validation.confidence >= 75) {
     const result = analyzeLocally(resume.text, resume.role);
-    console.log(`    Role: ${resume.role}`);
+    console.log(`    ✅ Validation Passed! Analyzing...`);
     console.log(`    Score: ${result.readiness_score}/100`);
-    console.log(`    Summary: ${result.summary}`);
-    console.log(`    Strengths (${result.strengths.length}):`);
-    result.strengths.forEach(s => console.log(`      + ${s}`));
-    console.log(`    Weaknesses (${result.weaknesses.length}):`);
-    result.weaknesses.forEach(w => console.log(`      - ${w}`));
-    console.log(`    Skills feedback: ${result.skills_feedback}`);
-    console.log(`    Top roadmap item: ${result.improvement_roadmap[0]}`);
+    console.log(`    Strengths: ${result.strengths[0]}`);
   } else {
-    console.log(`    ❌ Aborted: Not a resume (confidence below 70%)`);
+    console.log(`    ❌ Aborted: Validation Failed`);
+    if (validation.non_resume_signals_found.length > 0) {
+      console.log(`    Negative Signals: [${validation.non_resume_signals_found.join(', ')}]`);
+    }
   }
   console.log('');
 });
 
 console.log('='.repeat(70));
-console.log('  All 4 profiles produced unique, content-specific results ✓');
+console.log('  Testing complete ✓');
 console.log('='.repeat(70) + '\n');
