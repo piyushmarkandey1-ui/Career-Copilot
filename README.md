@@ -10,18 +10,21 @@ Career Copilot is an AI-powered resume analysis platform designed to act as a to
 
 - 🎯 **Advanced Resume Detection & Validation**:
   - **MIME Restriction**: Only accepts standard PDF format (`.pdf`).
-  - **Structural Verification**: Evaluates layout, name, contacts, and major sections to assign a **Resume Confidence Score** (0-100%).
-  - **Early Abortion**: Files with a confidence score under `70%` (such as research abstracts, articles, or random files) are rejected with a clear message to prevent database pollution.
-  - **Missing Section Detector**: Flags missing sections (e.g. *Skills*, *Education*, *Contact info*) to warn the candidate, while still permitting analysis if the document is clearly a resume.
+  - **Strict Structural Verification**: Rejects any document (e.g., stories, assignments, certificates, articles) that doesn't contain at least 4 clear resume sections/signals, or falls under a `75%` confidence score.
+  - **Word Count Protection**: Instantly rejects documents with fewer than 150 words.
+- 🧠 **Hyper-Personalized AI Profiling**:
+  - **Evidence-Based Critiques**: Every strength, weakness, and recommendation is explicitly linked to actual bullet points, projects, and metrics found in the resume. Generic advice is strictly banned.
+  - **Recruiter's Desk Summary**: A premium overview showing the "Standout Factor", "Biggest Improvement Area", and "Interview Readiness", mimicking a senior tech recruiter's thought process.
+  - **Confidence Tags & Target Role Alignment**: Evaluates how clearly skills align with industry expectations, attaching "High/Medium/Low" confidence tags to every observation.
 - 🔄 **Double Review Engine**:
   - **Detailed Review**: A deep-dive critique analyzing formatting, SDE metrics, project details, and ATS keywords.
   - **"Simplify This Review" Toggle**: Instantly translates technical recruiter jargon into plain, student-friendly language (e.g. converting *"lacks quantifiable metrics"* into *"your project explains what it does but doesn't explain the results you achieved"*).
 - 📈 **Growth Tracker**:
   - Save analysis results by email to track progress across revisions.
-  - Generates charts showing score improvements (ATS, Skills, Projects, Layout, and Readiness) over time.
+  - Generates interactive line charts tracking score improvements across versions.
   - Operates using permanent Supabase storage, with a seamless fallback to session memory if credentials are not configured.
 - 🎨 **Premium Glassmorphism UI**:
-  - Beautiful responsive dark-theme design featuring subtle animations, custom gradient score rings, and interactive filters.
+  - Beautiful responsive dark-theme design featuring subtle animations, custom gradient score rings, **interactive radar charts** for section-by-section breakdown, and categorized improvement roadmaps (High/Medium/Low Impact).
 
 ---
 
@@ -83,7 +86,7 @@ Test the local resume validation and analyzer heuristics using the built-in test
 ```bash
 node server/test-analyzer.js
 ```
-The test verifies validation confidence, missing section extraction, and SDE score results across 4 unique resume profiles (Strong SDE, Average SDE, Weak/Fresher, and a Non-Resume Document).
+The test suite evaluates strict validation confidence, negative signal detection (e.g. stories vs resumes), missing section extraction, and advanced heuristic scoring across multiple unique document profiles (Valid Resume, Missing Projects Resume, Story PDF, Assignment PDF, Empty PDF, Certificate PDF).
 
 ---
 
