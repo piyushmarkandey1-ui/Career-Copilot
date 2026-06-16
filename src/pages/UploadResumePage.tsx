@@ -92,6 +92,22 @@ export default function UploadResumePage() {
 
       if (data.success) {
         setState('done')
+
+        if (email.trim()) {
+          pendo.identify({
+            visitor: {
+              id: email.trim(),
+              email: email.trim(),
+              role: targetRole,
+              score: data.data.readiness_score,
+              createdAt: new Date().toISOString(),
+              targetRole: targetRole,
+              readinessScore: data.data.readiness_score,
+              analysisDate: new Date().toISOString(),
+            }
+          });
+        }
+
         setTimeout(() => {
           navigate('/results', {
             state: {

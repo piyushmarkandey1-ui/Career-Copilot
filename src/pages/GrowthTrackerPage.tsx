@@ -262,6 +262,28 @@ export default function GrowthTrackerPage() {
       setSubmittedEmail(trimmed)
       setSelectedRole('')
       setFetched(true)
+
+      const fetchedRecords: HistoryRecord[] = json.data ?? []
+      if (fetchedRecords.length > 0) {
+        const latest = fetchedRecords[fetchedRecords.length - 1]
+        pendo.identify({
+          visitor: {
+            id: trimmed,
+            email: trimmed,
+            role: latest.target_role,
+            score: latest.readiness_score,
+            createdAt: latest.analysis_date,
+            targetRole: latest.target_role,
+            resumeVersion: latest.resume_version,
+            readinessScore: latest.readiness_score,
+            atsScore: latest.ats_score,
+            skillsScore: latest.skills_score,
+            projectScore: latest.project_score,
+            layoutScore: latest.layout_score,
+            analysisDate: latest.analysis_date,
+          }
+        });
+      }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Something went wrong.')
     } finally {
