@@ -1,6 +1,6 @@
 import { useState, useRef, DragEvent, ChangeEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { UploadCloud, FileText, CheckCircle2, Loader2 } from 'lucide-react'
+import { UploadCloud, FileText, CheckCircle2, Loader2, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { BASE_URL } from '../config/api'
 
@@ -24,6 +24,7 @@ export default function UploadResumePage() {
   const [file, setFile] = useState<File | null>(null)
   const [targetRole, setTargetRole] = useState('')
   const [email, setEmail] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
   const [progress, setProgress] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
@@ -41,6 +42,7 @@ export default function UploadResumePage() {
   function onDrop(e: DragEvent<HTMLDivElement>) {
     e.preventDefault()
     setState('idle')
+    setErrorMessage('')
     const f = e.dataTransfer.files[0]
     if (f) handleFile(f)
   }
@@ -63,6 +65,7 @@ export default function UploadResumePage() {
     if (!file || !targetRole) return
 
     setState('uploading')
+    setErrorMessage('')
     setProgress(0)
 
     try {
@@ -119,11 +122,13 @@ export default function UploadResumePage() {
         }, 500)
       } else {
         setState('error')
+        setErrorMessage(data.message || 'Failed to analyze resume')
         toast.error(data.message || 'Failed to analyze resume')
       }
     } catch (error) {
       console.error('Upload error:', error)
       setState('error')
+      setErrorMessage('Failed to connect to server. Make sure the backend is running.')
       toast.error('Failed to connect to server. Make sure the backend is running.')
     }
   }
@@ -247,6 +252,18 @@ export default function UploadResumePage() {
           </select>
         </div>
       </div>
+
+      {/* Error Message Display */}
+      {state === 'error' && errorMessage && (
+        <div className="mt-8 flex items-start gap-3 rounded-2xl bg-red-500/10 border border-red-500/20 px-6 py-4 animate-fade-in-up">
+          <div className="mt-0.5 rounded-full bg-red-500/20 p-1">
+            <AlertCircle className="w-5 h-5 text-red-400" />
+          </div>
+          <p className="text-red-400 font-medium text-sm leading-relaxed">
+            {errorMessage}
+          </p>
+        </div>
+      )}
 
       {/* Submit Button */}
       <div className="mt-10 text-center">
