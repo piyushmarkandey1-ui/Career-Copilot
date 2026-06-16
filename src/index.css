@@ -25,17 +25,205 @@
 
 @layer utilities {
   .glass-panel {
-    @apply bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl;
+    background: rgba(255, 255, 255, 0.5) !important;
+    backdrop-filter: blur(24px) !important;
+    -webkit-backdrop-filter: blur(24px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.65) !important;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.04) !important;
   }
+  
+  .glass-strong {
+    background: rgba(255, 255, 255, 0.75) !important;
+    backdrop-filter: blur(24px) !important;
+    -webkit-backdrop-filter: blur(24px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.8) !important;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05) !important;
+  }
+
   .gradient-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-violet-400 via-fuchsia-400 to-indigo-400;
+    background-clip: text !important;
+    -webkit-background-clip: text !important;
+    color: transparent !important;
+    background-image: linear-gradient(to right, #4f46e5, #c026d3, #7c3aed) !important;
   }
 }
 
 body {
-  @apply bg-slate-950 text-slate-50 antialiased selection:bg-violet-500/30 selection:text-violet-200;
+  background-color: #f8fafc !important;
+  color: #1e293b !important;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background-image: 
-    radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
-    radial-gradient(circle at 0% 50%, rgba(99, 102, 241, 0.1) 0%, transparent 50%);
-  background-attachment: fixed;
+    radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.12) 0%, transparent 65%),
+    radial-gradient(circle at 100% 50%, rgba(99, 102, 241, 0.08) 0%, transparent 55%),
+    radial-gradient(circle at 0% 100%, rgba(244, 63, 94, 0.06) 0%, transparent 50%) !important;
+  background-attachment: fixed !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Selection colors */
+::selection {
+  background-color: rgba(99, 102, 241, 0.15) !important;
+  color: #4f46e5 !important;
+}
+
+/* ─── White Glassmorphic Adaptive Theme Overrides ────────────────────────── */
+
+/* Text colors: translate dark-mode optimized colors to high-contrast light colors */
+.text-white, .text-slate-50 {
+  color: #0f172a !important; /* slate-900 */
+}
+.text-slate-100, .text-slate-200 {
+  color: #1e293b !important; /* slate-800 */
+}
+.text-slate-300 {
+  color: #334155 !important; /* slate-700 */
+}
+.text-slate-400 {
+  color: #475569 !important; /* slate-600 */
+}
+.text-slate-500 {
+  color: #64748b !important; /* slate-500 */
+}
+
+/* Highlight text colors */
+.text-indigo-400, .text-indigo-300 {
+  color: #4f46e5 !important; /* indigo-600 */
+}
+.text-violet-400 {
+  color: #7c3aed !important; /* violet-600 */
+}
+.text-fuchsia-400 {
+  color: #c026d3 !important; /* fuchsia-600 */
+}
+.text-emerald-400 {
+  color: #059669 !important; /* emerald-600 */
+}
+.text-amber-400 {
+  color: #d97706 !important; /* amber-600 */
+}
+.text-rose-400 {
+  color: #e11d48 !important; /* rose-600 */
+}
+.text-cyan-400 {
+  color: #0891b2 !important; /* cyan-600 */
+}
+.text-orange-400 {
+  color: #ea580c !important; /* orange-600 */
+}
+.text-blue-400 {
+  color: #2563eb !important; /* blue-600 */
+}
+
+/* Filled backgrounds: make dark/black elements look like clean frosted white glass */
+.bg-slate-950, .bg-slate-900, .bg-slate-800, 
+.bg-slate-950\/50, .bg-slate-900\/50, .bg-slate-800\/50,
+.bg-white\/5, .bg-white\/10, .bg-black\/20 {
+  background-color: rgba(255, 255, 255, 0.45) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+}
+
+/* Nested white-background card items */
+.bg-white\/5 {
+  background-color: rgba(255, 255, 255, 0.3) !important;
+}
+.bg-white\/10 {
+  background-color: rgba(255, 255, 255, 0.5) !important;
+}
+.bg-white\/20 {
+  background-color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Badge colors */
+.bg-indigo-500\/10, .bg-indigo-500\/20 {
+  background-color: rgba(99, 102, 241, 0.08) !important;
+  border-color: rgba(99, 102, 241, 0.15) !important;
+}
+.bg-fuchsia-500\/20 {
+  background-color: rgba(240, 70, 250, 0.08) !important;
+  border-color: rgba(240, 70, 250, 0.15) !important;
+}
+.bg-emerald-500\/20 {
+  background-color: rgba(16, 185, 129, 0.08) !important;
+  border-color: rgba(16, 185, 129, 0.15) !important;
+}
+
+/* Borders */
+.border-slate-800, .border-slate-700, .border-slate-600,
+.border-white\/10, .border-white\/5 {
+  border-color: rgba(255, 255, 255, 0.65) !important;
+}
+.border-white\/20 {
+  border-color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Form inputs & dropdowns styling */
+input, select, textarea {
+  background-color: rgba(255, 255, 255, 0.6) !important;
+  border: 1px solid rgba(15, 23, 42, 0.1) !important;
+  color: #0f172a !important;
+}
+input::placeholder, textarea::placeholder {
+  color: #94a3b8 !important;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: #6366f1 !important;
+  background-color: rgba(255, 255, 255, 0.95) !important;
+}
+option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* Navigation scroll border */
+nav.glass-strong {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Hero Section Gradient Text */
+.from-rose-400.via-fuchsia-400.to-indigo-400 {
+  background-image: linear-gradient(to right, #f43f5e, #c026d3, #4f46e5) !important;
+}
+
+/* Background gradient blobs mix-blend conversion for light mode */
+.mix-blend-screen {
+  mix-blend-mode: multiply !important;
+  opacity: 0.12 !important;
+}
+
+/* ─── Preserve White Text for Filled/Vibrant UI Elements ────────────────── */
+.bg-indigo-600, .bg-violet-600, .bg-emerald-600, .bg-fuchsia-600,
+.bg-indigo-500, .bg-violet-500, .bg-emerald-500, .bg-rose-600,
+.bg-indigo-600 *, .bg-violet-600 *, .bg-emerald-600 *, .bg-fuchsia-600 *,
+.bg-indigo-500 *, .bg-violet-500 *, .bg-emerald-500 *, .bg-rose-600 *,
+button.bg-white, button.bg-white * {
+  /* Buttons and active controls must keep their text color */
+}
+
+/* Explicit text color overrides on filled background elements */
+.bg-violet-600, .bg-emerald-600, .bg-indigo-600, .bg-indigo-500 {
+  color: #ffffff !important;
+}
+.bg-violet-600 .text-white, .bg-emerald-600 .text-white, .bg-indigo-600 .text-white {
+  color: #ffffff !important;
+}
+
+/* ─── SVG Charts Adjustments ────────────────────────────────────────────── */
+.recharts-cartesian-grid line {
+  stroke: rgba(15, 23, 42, 0.08) !important;
+}
+.recharts-default-tooltip {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid rgba(15, 23, 42, 0.08) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05) !important;
+}
+.recharts-tooltip-item {
+  color: #1e293b !important;
+}
+
+/* Score Ring inner track color */
+svg circle[stroke="rgba(255,255,255,0.1)"] {
+  stroke: rgba(15, 23, 42, 0.06) !important;
 }
