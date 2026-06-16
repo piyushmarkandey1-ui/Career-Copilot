@@ -14,8 +14,9 @@ import {
   ResponsiveContainer, Legend,
 } from 'recharts'
 
-// Use relative paths — Vite proxy forwards /api/* to the backend (no CORS, works in prod too)
-const API_URL = ''
+// Import BASE_URL so API requests map to the external backend in production
+import { BASE_URL } from '../config/api'
+const API_URL = BASE_URL
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface HistoryRecord {
