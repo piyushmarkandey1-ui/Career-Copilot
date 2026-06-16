@@ -6,7 +6,7 @@ export default function LandingPage() {
     <main className="min-h-screen relative overflow-hidden">
       {/* Background Effects */}
       <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20viewBox=%220%200%20200%20200%22%20xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter%20id=%22noise%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.85%22%20numOctaves=%223%22%20stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect%20width=%22100%25%22%20height=%22100%25%22%20filter=%22url(%23noise)%22/%3E%3C/svg%3E')] opacity-[0.018] mix-blend-overlay"></div>
         <div className="absolute top-0 -translate-y-12 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-violet-600/30 blur-[120px] rounded-full mix-blend-screen animate-blob"></div>
         <div className="absolute top-40 -translate-x-12 left-1/4 w-[600px] h-[600px] bg-fuchsia-600/20 blur-[120px] rounded-full mix-blend-screen animate-blob animation-delay-2000"></div>
         <div className="absolute top-1/2 translate-x-1/4 right-1/4 w-[500px] h-[500px] bg-indigo-600/20 blur-[100px] rounded-full mix-blend-screen animate-blob animation-delay-4000"></div>
