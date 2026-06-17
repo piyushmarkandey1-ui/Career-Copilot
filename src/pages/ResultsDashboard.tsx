@@ -77,7 +77,7 @@ function ScoreRing({ score }: { score: number }) {
     <div className="relative flex h-48 w-48 items-center justify-center">
       <svg className="absolute -rotate-90" width="192" height="192">
         <circle cx="96" cy="96" r={radius} strokeWidth="12" stroke="rgba(255,255,255,0.1)" fill="none" />
-        <circle cx="96" cy="96" r={radius} strokeWidth="12" stroke={`url(#scoreGrad${score})`} fill="none" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={offset} style={{ transition: 'stroke-dashoffset 1.5s ease' }} />
+        <circle cx="96" cy="96" r={radius} strokeWidth="12" stroke={`url(#scoreGrad${score})`} fill="none" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={offset} className="score-ring-circle" />
         <defs>
           <linearGradient id={`scoreGrad${score}`} x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={color.from} />

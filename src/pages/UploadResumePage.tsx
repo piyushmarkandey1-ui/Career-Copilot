@@ -138,37 +138,49 @@ export default function UploadResumePage() {
   const canSubmit = file && targetRole && state !== 'uploading' && state !== 'done'
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-20 relative">
+    <main className="mx-auto max-w-3xl px-4 sm:px-6 py-16 sm:py-20 relative min-h-screen">
       {/* Background glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-violet-600/10 blur-[120px] rounded-full pointer-events-none -z-10 animate-pulse-slow"></div>
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(600px,90vw)] h-[400px] bg-violet-600/10 blur-[120px] rounded-full pointer-events-none -z-10"></div>
 
       {/* Header */}
-      <div className="mb-12 text-center animate-fade-in-up">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-violet-500/20 bg-violet-500/10 text-violet-300 text-xs font-bold uppercase tracking-wider mb-6">
+      <div className="mb-10 sm:mb-12 text-center">
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-indigo-200 bg-indigo-50 text-indigo-700 text-xs sm:text-sm font-bold uppercase tracking-wider mb-4 sm:mb-6">
           Step 1: Upload
         </div>
-        <h1 className="mb-4 text-4xl md:text-5xl font-extrabold tracking-tight">
-          Upload Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-indigo-400">Resume</span>
+        <h1 className="mb-4 text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight px-4 sm:px-0">
+          Upload Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">Resume</span>
         </h1>
-        <p className="text-slate-400 text-lg max-w-xl mx-auto font-light">
+        <p className="text-slate-400 text-base sm:text-lg max-w-xl mx-auto px-4 sm:px-0">
           Drop your PDF below. Our AI will analyze it against your target role and give you a brutal, actionable breakdown.
         </p>
       </div>
 
       {/* Drop zone */}
-      <div className="relative group">
+      <div className="relative group mb-6 sm:mb-8">
         {/* Animated border gradient */}
         <div className={`absolute -inset-1 rounded-3xl blur-md transition-all duration-500 ${state === 'dragging' ? 'bg-gradient-to-r from-violet-600 to-indigo-600 opacity-70' : 'bg-gradient-to-r from-white/5 to-white/5 opacity-0 group-hover:opacity-100 group-hover:from-violet-600/30 group-hover:to-indigo-600/30'}`}></div>
         
+        {/* Hidden file input with accessible label */}
+        <label htmlFor="resume-file-input" className="sr-only">
+          Upload resume PDF
+        </label>
+        <input
+          id="resume-file-input"
+          ref={inputRef}
+          type="file"
+          accept=".pdf"
+          className="sr-only"
+          onChange={onInputChange}
+          aria-describedby="resume-file-hint"
+        />
+
         <div
           className={`
-            relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed
-            p-14 text-center cursor-pointer transition-all duration-300 backdrop-blur-sm
-            ${state === 'dragging'
-              ? 'border-violet-400 bg-violet-500/10 shadow-[0_0_30px_rgba(139,92,246,0.15)] scale-[1.02]'
-              : file
-              ? 'border-violet-500/40 bg-violet-500/5'
-              : 'border-white/10 bg-slate-900/50 hover:border-violet-500/40 hover:bg-white/5'}
+            relative flex flex-col items-center justify-center rounded-2xl
+            p-10 sm:p-14 text-center cursor-pointer transition-all duration-300 backdrop-blur-sm min-h-[200px] sm:min-h-[240px]
+            premium-dropzone
+            ${state === 'dragging' ? 'dragging' : ''}
+            ${file ? 'has-file' : ''}
           `}
           onDrop={onDrop}
           onDragOver={onDragOver}
@@ -179,46 +191,37 @@ export default function UploadResumePage() {
           tabIndex={0}
           onKeyDown={e => e.key === 'Enter' && inputRef.current?.click()}
         >
-          <input
-            ref={inputRef}
-            type="file"
-            accept=".pdf"
-            className="hidden"
-            onChange={onInputChange}
-          />
 
           {file ? (
-            <div className="flex flex-col items-center animate-fade-in-up">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/25 mb-4">
-                <FileText className="w-8 h-8 text-white" />
+            <div className="flex flex-col items-center animate-fade-in-up w-full">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg mb-3 sm:mb-4">
+                <FileText className="w-7 h-7 sm:w-8 sm:h-8 text-white flex-shrink-0" />
               </div>
-              <p className="text-lg font-bold text-white">{file.name}</p>
-              <p className="mt-1 text-sm text-slate-400">
+              <p className="text-base sm:text-lg font-bold text-slate-200 break-all px-2">{file.name}</p>
+              <p className="mt-1 text-xs sm:text-sm text-slate-400">
                 {(file.size / 1024).toFixed(1)} KB · Click to replace
               </p>
             </div>
           ) : (
-            <div className="flex flex-col items-center text-slate-400">
-              <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mb-4 group-hover:bg-violet-500/20 group-hover:text-violet-300 transition-colors duration-300 border border-white/5 group-hover:border-violet-500/30">
-                <UploadCloud className="w-8 h-8 transition-transform duration-300 group-hover:-translate-y-1" />
+            <div className="flex flex-col items-center text-slate-600">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center mb-3 sm:mb-4 group-hover:bg-indigo-500/20 transition-colors duration-300">
+                <UploadCloud className="w-7 h-7 sm:w-8 sm:h-8 text-indigo-400 transition-transform duration-300 group-hover:-translate-y-1 flex-shrink-0" />
               </div>
-              <p className="mb-2 text-lg font-semibold text-slate-200">
+              <p className="mb-2 text-base sm:text-lg font-semibold text-slate-200">
                 Drag & drop your resume here
               </p>
-              <p className="text-sm">or click to browse from your computer</p>
-              <p className="mt-4 text-xs text-slate-500">PDF only (Max 10MB)</p>
+              <p className="text-sm text-slate-400">or click to browse from your computer</p>
+              <p className="mt-3 sm:mt-4 text-xs text-slate-400" id="resume-file-hint">PDF only (Max 10MB)</p>
             </div>
           )}
         </div>
       </div>
 
-
-
-      {/* Form Fields */}
-      <div className="mt-10 space-y-6 glass-panel p-8 rounded-3xl">
+      {/* Form Fields - Responsive */}
+      <div className="mt-8 sm:mt-10 space-y-5 sm:space-y-6 premium-card p-6 sm:p-8">
         <div>
           <label className="mb-2 block text-sm font-medium text-slate-300" htmlFor="email">
-            Email <span className="text-slate-500 text-xs font-normal">(optional — required to use Growth Tracker)</span>
+            Email <span className="text-slate-400 text-xs font-normal">(optional — for Growth Tracker)</span>
           </label>
           <input
             id="email"
@@ -226,26 +229,26 @@ export default function UploadResumePage() {
             value={email}
             onChange={e => setEmail(e.target.value)}
             placeholder="you@example.com"
-            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-slate-500 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+            className="premium-input w-full"
           />
         </div>
 
         {/* Target Role Dropdown */}
         <div>
           <label className="mb-2 block text-sm font-medium text-slate-300" htmlFor="targetRole">
-            Target Role <span className="text-red-400">*</span>
+            Target Role <span className="text-red-600">*</span>
           </label>
           <select
             id="targetRole"
             value={targetRole}
             onChange={e => setTargetRole(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+            className="premium-input w-full"
           >
-            <option value="" disabled className="bg-slate-900">
+            <option value="" disabled>
               Select your target role…
             </option>
             {roles.map(role => (
-              <option key={role} value={role} className="bg-slate-900">
+              <option key={role} value={role}>
                 {role}
               </option>
             ))}
@@ -293,7 +296,7 @@ export default function UploadResumePage() {
           {state === 'uploading' && (
             <div
               className="absolute left-0 top-0 bottom-0 bg-violet-400 transition-all duration-300 ease-out z-10"
-              style={{ width: `${progress}%` }}
+              ref={el => { if (el) el.style.width = `${progress}%` }}
             />
           )}
         </button>
