@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import LandingPage from './pages/LandingPage'
 import UploadResumePage from './pages/UploadResumePage'
@@ -11,10 +11,17 @@ import { Toaster } from 'sonner'
 
 function App() {
   const [theme, setTheme] = useState<'light-mode' | 'dark-mode'>('light-mode')
+  const location = useLocation()
 
   useEffect(() => {
     document.body.className = theme
   }, [theme])
+
+  useEffect(() => {
+    if (typeof pendo !== 'undefined') {
+      pendo.pageLoad()
+    }
+  }, [location.pathname])
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'light-mode' ? 'dark-mode' : 'light-mode')
