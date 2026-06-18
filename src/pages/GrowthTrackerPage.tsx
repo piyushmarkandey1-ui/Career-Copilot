@@ -264,6 +264,13 @@ export default function GrowthTrackerPage() {
       setFetched(true)
 
       const fetchedRecords: HistoryRecord[] = json.data ?? []
+
+      pendo.track('growth_history_fetched', {
+        recordCount: fetchedRecords.length,
+        roleCount: (json.available_roles ?? []).length,
+        isPersisted: json.persisted ?? true,
+      })
+
       if (fetchedRecords.length > 0) {
         const latest = fetchedRecords[fetchedRecords.length - 1]
         pendo.identify({
@@ -281,6 +288,9 @@ export default function GrowthTrackerPage() {
             projectScore: latest.project_score,
             layoutScore: latest.layout_score,
             analysisDate: latest.analysis_date,
+          },
+          account: {
+            id: 'career-copilot-public',
           }
         });
       }
@@ -305,6 +315,9 @@ export default function GrowthTrackerPage() {
       if (!res.ok) throw new Error(json.message || 'Failed to clear history.')
       
       // Reset state for a fresh start
+      pendo.track('growth_history_cleared', {
+        recordCount: allRecords.length,
+      })
       setAllRecords([])
       setAvailableRoles([])
       setSelectedRole('')
