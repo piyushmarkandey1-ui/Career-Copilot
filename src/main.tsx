@@ -17,6 +17,9 @@ const getVisitorId = (): string => {
 pendo.initialize({
   visitor: {
     id: getVisitorId()
+  },
+  account: {
+    id: 'career-copilot-public'
   }
 });
 
