@@ -68,6 +68,13 @@ export default function UploadResumePage() {
     setErrorMessage('')
     setProgress(0)
 
+    pendo.track('resume_analysis_submitted', {
+      targetRole,
+      hasEmail: !!email.trim(),
+      fileName: file.name,
+      fileSize: file.size,
+    })
+
     try {
       // Create form data
       const formData = new FormData()
@@ -95,6 +102,13 @@ export default function UploadResumePage() {
         toast.success('Analysis complete!')
         setState('done')
 
+        pendo.track('resume_analysis_completed', {
+          targetRole,
+          readinessScore: data.data.readiness_score,
+          hasEmail: !!email.trim(),
+          resumeDetectionConfidence: data.data.resume_detection?.confidence ?? null,
+        })
+
         if (email.trim()) {
           pendo.identify({
             visitor: {
@@ -106,6 +120,9 @@ export default function UploadResumePage() {
               targetRole: targetRole,
               readinessScore: data.data.readiness_score,
               analysisDate: new Date().toISOString(),
+            },
+            account: {
+              id: 'career-copilot-public',
             }
           });
         }
@@ -124,12 +141,22 @@ export default function UploadResumePage() {
         setState('error')
         setErrorMessage(data.message || 'Failed to analyze resume')
         toast.error(data.message || 'Failed to analyze resume')
+        pendo.track('resume_analysis_failed', {
+          targetRole,
+          reason: data.message || 'server_error',
+          hasEmail: !!email.trim(),
+        })
       }
     } catch (error) {
       console.error('Upload error:', error)
       setState('error')
       setErrorMessage('Failed to connect to server. Make sure the backend is running.')
       toast.error('Failed to connect to server. Make sure the backend is running.')
+      pendo.track('resume_analysis_failed', {
+        targetRole,
+        reason: 'network_error',
+        hasEmail: !!email.trim(),
+      })
     }
   }
 
